@@ -1,0 +1,53 @@
+{
+  "name": "moderato",
+  "version": "0.1.0",
+  "description": "Content moderation, in tempo. Wrap inputs, image pickers, and video uploads with allow / review / block screening — OpenAI omni-moderation, your own endpoint, or local rules. Server-authoritative by design.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts",
+    "./web": "./src/web/index.tsx"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "tsup",
+    "bench": "node bench/run.mjs",
+    "cycle": "node bench/cycle.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "~19.2.10",
+    "jsdom": "^26.1.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tsup": "^8.5.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.9"
+  },
+  "keywords": [
+    "moderation",
+    "content-moderation",
+    "trust-and-safety",
+    "openai",
+    "omni-moderation",
+    "react",
+    "image-moderation",
+    "video-moderation",
+    "nsfw",
+    "profanity"
+  ]
+}
