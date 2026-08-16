@@ -21,9 +21,12 @@ import { createRequire } from "node:module";
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = resolve(import.meta.dirname, "..");
+// Not `import.meta.dirname`, which lands in Node 20.11 — this script has to
+// run on the oldest Node `engines` promises, because verifying the tarball
+// imports on 18 is half of what it is for.
+const root = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const stage = mkdtempSync(join(tmpdir(), "moderato-verify-"));
 
 /** Entry points, and one export we expect each to carry. */

@@ -61,10 +61,14 @@ time.
 
 ### 4. The metrics are regenerated, not written
 
-`npm run rehearse` produces `docs/static/rehearsal/latest.json` and CI runs it.
-If a policy change moves the numbers, the diff shows up in the same pull request
-as the change. Nobody can update the code and leave a flattering old number on
-the page.
+`npm run rehearse` produces `docs/static/rehearsal/latest.json`, and CI
+regenerates it and compares (`npm run check:rehearsal`). If a policy change
+moves the numbers, the diff shows up in the same pull request as the change.
+Nobody can update the code and leave a flattering old number on the page.
+
+The comparison ignores exactly one field, `generatedAt`. A wall clock differs
+on every run by construction, and a guard that fails every time is a guard
+somebody switches off.
 
 ## The release checklist
 
@@ -74,6 +78,7 @@ npm test
 npm run build
 npm run verify:package    # packs, unpacks, imports every entry point
 npm run rehearse          # regenerate the metrics
+npm run check:rehearsal   # the committed report is the current one
 npm run check:docs        # no undocumented or stale API
 npm run docs:build        # the site builds against the real dist
 ```

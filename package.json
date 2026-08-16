@@ -1,7 +1,7 @@
 {
   "name": "moderato",
   "version": "1.0.0",
-  "description": "Content moderation, in tempo. Wrap any input, image picker, or upload with allow / review / block screening \u2014 OpenAI omni-moderation, your own endpoint, or offline rules. Client for speed, server for truth.",
+  "description": "Content moderation, in tempo. Wrap any input, image picker, or upload with allow / review / block screening — OpenAI omni-moderation, your own endpoint, or offline rules. Client for speed, server for truth.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -62,12 +62,13 @@
     "verify:package": "node scripts/verify-package.mjs",
     "rehearse": "node scripts/rehearse.mjs",
     "check:docs": "node scripts/check-docs.mjs",
+    "check:rehearsal": "node scripts/check-rehearsal.mjs",
     "docs:start": "npm --prefix docs run start",
     "docs:build": "npm run build && npm --prefix docs run build",
     "docs:version": "npm --prefix docs run version",
     "bench": "node bench/run.mjs",
     "cycle": "node bench/cycle.mjs",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run verify:package && npm run rehearse && npm run check:docs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run verify:package && npm run rehearse && npm run check:rehearsal && npm run check:docs",
     "deploy:docs": "gcloud run deploy moderato-docs --source . --region us-central1 --port 8080 --allow-unauthenticated"
   },
   "peerDependencies": {

@@ -36,6 +36,26 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   walked straight past it — so `piiProvider`, which flags, was never opted out
   of. An unreachable review threshold now drops the category regardless of how
   it was raised.
+- **An engine-cache collision in `defineModeration`.** Engines were keyed by
+  surface kind and word allowances, so two surfaces differing only in audience
+  shared one engine carrying the other's default policy. The key now includes
+  the policy.
+- **`verify:package` could not run on Node 18** — the script used
+  `import.meta.dirname`, which lands in Node 20.11. The job that proves the
+  tarball imports on the oldest supported Node could not itself start there.
+  CI now runs it on 18 as well as 22.
+- **CI's rehearsal guard failed on every run.** It diffed the committed report
+  against a fresh one including `generatedAt`, a wall clock that differs by
+  construction. `npm run check:rehearsal` compares every metric and ignores
+  that field.
+- **The Pages deploy built the site and then failed** with "Get Pages site
+  failed", because Pages was off for the repository and the workflow could not
+  turn it on. `actions/configure-pages` now runs first with `enablement: true`,
+  so a push is the entire deploy — no settings page, no computer.
+- **CI's test matrix included a Node the test runner cannot start on.** Vitest
+  needs `node:util`'s `styleText` (Node 20.12+), so the matrix is 20/22/24 and
+  the Node 18 promise is verified where it is actually meaningful: importing
+  the built tarball.
 
 ---
 

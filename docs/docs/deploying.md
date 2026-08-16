@@ -7,20 +7,27 @@ title: Publishing the docs
 
 Two ways. One needs nothing but a phone.
 
-## From a phone, in about a minute
+## From a phone, or from nothing at all
 
 GitHub Pages builds and publishes the site itself. No CLI, no credentials, no
 local checkout — GitHub already has the repository and the workflow.
 
-1. Open the repository on github.com (the mobile site works, and so does the
-   app's "browser" view).
-2. **Settings → Pages**.
-3. Under **Build and deployment → Source**, choose **GitHub Actions**.
-4. That is it. The next push publishes. To publish right now instead of
-   waiting: **Actions → Deploy docs (GitHub Pages) → Run workflow**.
+**Push, and it publishes.** The workflow turns Pages on for the repository the
+first time it runs (`actions/configure-pages` with `enablement: true`), so
+there is no settings page to visit and nothing to click. To publish on demand
+instead of waiting for a push: **Actions → Deploy docs (GitHub Pages) → Run
+workflow**, which is two taps in the GitHub mobile app.
 
 The site lands at `https://<your-username>.github.io/<repo>/` and the URL is
 printed at the top of the workflow run.
+
+:::note If it ever says "Get Pages site failed"
+That is Pages being off with the workflow unable to turn it on — an
+organisation policy, or a repository where the token has not been granted
+`pages: write`. The manual path is **Settings → Pages → Build and deployment →
+Source → GitHub Actions**, once, and then this workflow is self-sufficient
+again.
+:::
 
 The workflow builds the library first, runs `check:docs`, then builds the
 site — so a broken deploy fails for the same reasons CI does. It also sets
@@ -30,8 +37,8 @@ for the root would load none of its own assets.
 :::tip Why this one and not the other
 Cloud Run is the better long-term home — your own domain, your own caching,
 the same shape as everything else you deploy. It also needs `gcloud`, a
-signed-in machine and credentials. Pages needs a settings toggle. Use Pages
-now; switch when you are back at a computer, and keep both if you like.
+signed-in machine and credentials. Pages needs a push. Use Pages now; switch
+when you are back at a computer, and keep both if you like.
 :::
 
 ## From a computer, to Cloud Run

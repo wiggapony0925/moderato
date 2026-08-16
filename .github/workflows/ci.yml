@@ -15,8 +15,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 18 is the floor `engines` promises; 22 is what most people run.
-        node: [18, 20, 22]
+        # The test runner needs node:util's styleText, which lands in 20.12.
+        # That is a constraint on OUR toolchain, not on consumers — the floor
+        # `engines` promises is verified by the `package` job below, which
+        # imports the built tarball on 18 the way an installer would.
+        node: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +34,11 @@ jobs:
     # The check that tests cannot do: the published tarball resolving from
     # `dist` while the repo develops from `src`. There is no undo on a
     # published version.
+    #
+    # It runs twice. On 22, because that is where the build works. Then on 18,
+    # because `engines` promises 18 and a promise nothing exercises is a
+    # rumour — this is the job that would catch dist emitting syntax the
+    # floor cannot parse.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +49,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run verify:package
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: The published tarball imports on the oldest supported Node
+        run: node --version && npm run verify:package
 
   rehearsal:
     # Metrics are regenerated, never hand-written. If a policy change moves
@@ -56,18 +69,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Rehearse against the corpus
-        # Pinned timestamp so the only diff is the metrics themselves.
-        run: REHEARSAL_AT=$(git log -1 --format=%cI) npm run rehearse
-      - name: Committed report matches a fresh run
-        run: |
-          if ! git diff --quiet -- docs/static/rehearsal/latest.json; then
-            echo "::error::docs/static/rehearsal/latest.json is stale."
-            echo "The policy or the corpus changed without regenerating the report."
-            echo "Run: npm run build && npm run rehearse — then commit the result."
-            git --no-pager diff -- docs/static/rehearsal/latest.json
-            exit 1
-          fi
+      - run: npm run rehearse
+      # Compares every metric and ignores `generatedAt`. A wall clock differs
+      # on every run by construction, and a guard that always fails is a
+      # guard somebody turns off.
+      - run: npm run check:rehearsal
 
   docs:
     # Two guards in one job. `check:docs` fails on an undocumented export or

@@ -568,6 +568,7 @@ npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point
 npm run rehearse         # regenerate the metrics
+npm run check:rehearsal  # the committed report is the current one
 npm run check:docs       # no undocumented or stale API
 npm run docs:start       # the site, locally
 ```

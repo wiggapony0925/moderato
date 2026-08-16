@@ -3,9 +3,9 @@ name: Deploy docs (GitHub Pages)
 # The no-computer path.
 #
 # Cloud Run needs `gcloud`, a signed-in machine, and credentials. This needs
-# a phone: turn Pages on in the repository settings, and every push builds
-# and publishes the site. No secrets, no CLI, no local checkout — GitHub
-# already has everything it needs.
+# nothing: every push builds and publishes the site. No secrets, no CLI, no
+# local checkout, and not even a visit to the settings page — the job turns
+# Pages on itself (`enablement: true`) the first time it runs.
 #
 # `workflow_dispatch` means you can also deploy on demand from the Actions
 # tab, which is two taps in the GitHub mobile app.
@@ -29,6 +29,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # First, before anything is built. `enablement` turns Pages on for the
+      # repository if it is off, which is what makes this workflow the whole
+      # deploy rather than the second half of one — without it the first run
+      # builds the site perfectly and then fails with "Get Pages site failed",
+      # and somebody has to go and find a settings page.
+      - uses: actions/configure-pages@v5
+        id: pages
+        with:
+          enablement: true
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -50,8 +61,6 @@ jobs:
           DOCS_BASE_URL: /${{ github.event.repository.name }}/
         run: npm --prefix docs run build
 
-      - uses: actions/configure-pages@v5
-        id: pages
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/build
