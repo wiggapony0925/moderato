@@ -48,10 +48,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   against a fresh one including `generatedAt`, a wall clock that differs by
   construction. `npm run check:rehearsal` compares every metric and ignores
   that field.
-- **The Pages deploy built the site and then failed** with "Get Pages site
-  failed", because Pages was off for the repository and the workflow could not
-  turn it on. `actions/configure-pages` now runs first with `enablement: true`,
-  so a push is the entire deploy — no settings page, no computer.
+- **The Pages deploy built the site for four minutes and then failed** with
+  "Get Pages site failed", because Pages was off for the repository.
+  `actions/configure-pages` now runs first — so the failure is immediate — and
+  asks GitHub to enable Pages itself. Where that is refused (creating a Pages
+  site needs repository-admin rights `GITHUB_TOKEN` cannot hold, and a private
+  repository additionally needs a paid plan), the job prints the two settings
+  to change instead of a raw HTTP error.
 - **CI's test matrix included a Node the test runner cannot start on.** Vitest
   needs `node:util`'s `styleText` (Node 20.12+), so the matrix is 20/22/24 and
   the Node 18 promise is verified where it is actually meaningful: importing

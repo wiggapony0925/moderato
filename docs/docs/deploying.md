@@ -7,26 +7,36 @@ title: Publishing the docs
 
 Two ways. One needs nothing but a phone.
 
-## From a phone, or from nothing at all
+## From a phone
 
 GitHub Pages builds and publishes the site itself. No CLI, no credentials, no
-local checkout — GitHub already has the repository and the workflow.
+local checkout — GitHub already has the repository and the workflow. What it
+does need is a browser once, to turn Pages on.
 
-**Push, and it publishes.** The workflow turns Pages on for the repository the
-first time it runs (`actions/configure-pages` with `enablement: true`), so
-there is no settings page to visit and nothing to click. To publish on demand
-instead of waiting for a push: **Actions → Deploy docs (GitHub Pages) → Run
-workflow**, which is two taps in the GitHub mobile app.
+**Before the first deploy — two checks, both in a phone browser:**
+
+1. **Is the repository private?** Pages on a private repository requires
+   GitHub Pro, Team or Enterprise; on the free plan it is public repositories
+   only. If yours is private and you are on Free, either make it public
+   (**Settings → General → Danger Zone → Change visibility**) or upgrade. For
+   a package heading to npm, public is usually the answer — but it publishes
+   the whole history, so it is a decision, not a checkbox.
+2. **Turn Pages on:** **Settings → Pages → Build and deployment → Source →
+   GitHub Actions**.
+
+**After that, push and it publishes.** To publish on demand instead of waiting
+for a push: **Actions → Deploy docs (GitHub Pages) → Run workflow**, which is
+two taps in the GitHub mobile app.
 
 The site lands at `https://<your-username>.github.io/<repo>/` and the URL is
 printed at the top of the workflow run.
 
-:::note If it ever says "Get Pages site failed"
-That is Pages being off with the workflow unable to turn it on — an
-organisation policy, or a repository where the token has not been granted
-`pages: write`. The manual path is **Settings → Pages → Build and deployment →
-Source → GitHub Actions**, once, and then this workflow is self-sufficient
-again.
+:::note "Get Pages site failed" / "Resource not accessible by integration"
+Both mean Pages is off and the workflow could not turn it on for you. It does
+try — `actions/configure-pages` runs with `enablement: true` — but creating a
+Pages site needs repository-admin rights, and `GITHUB_TOKEN` cannot be granted
+those. The job fails early with the two steps above printed in its log rather
+than building for four minutes first.
 :::
 
 The workflow builds the library first, runs `check:docs`, then builds the
@@ -37,8 +47,9 @@ for the root would load none of its own assets.
 :::tip Why this one and not the other
 Cloud Run is the better long-term home — your own domain, your own caching,
 the same shape as everything else you deploy. It also needs `gcloud`, a
-signed-in machine and credentials. Pages needs a push. Use Pages now; switch
-when you are back at a computer, and keep both if you like.
+signed-in machine and credentials. Pages needs a browser once and then
+nothing. Use Pages now; switch when you are back at a computer, and keep both
+if you like.
 :::
 
 ## From a computer, to Cloud Run
