@@ -411,7 +411,7 @@ entry point, no runtime dependencies.
 
 ```bash
 npm install
-npm test           # 135 tests
+npm test           # 136 tests
 npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point

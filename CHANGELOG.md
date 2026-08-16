@@ -52,7 +52,7 @@ and enough automation that the obvious cases never reach a human.
   (for the sink), and `signal` (caller cancellation, honoured alongside the
   engine's own timeout).
 - **`Moderato.screenText(text)`** for the common case.
-- **135 tests**, covering every entry point, and `npm run verify:package`, which
+- **136 tests**, covering every entry point, and `npm run verify:package`, which
   packs the tarball, unpacks it somewhere clean, and imports every published
   entry point as a real consumer would.
 
@@ -78,9 +78,14 @@ and enough automation that the obvious cases never reach a human.
   a case while the slur stayed live. Set `blockScore: Infinity` for the old
   behaviour.
 - `ModeratoConfig.provider` also accepts an array (a chain).
-- The published package now resolves from `dist` via `publishConfig`, while the
-  repository keeps exporting TypeScript source so the monorepo can consume it
-  unbuilt. `verify:package` proves the published shape resolves.
+- The package now resolves from `dist` — `main`, `module`, `types` and every
+  `exports` condition. `prepare` builds it on install so a fresh clone or a
+  linked workspace works without a separate step, and `verify:package` proves
+  the published shape resolves. (`publishConfig.exports` was the tidier-looking
+  option and is a trap: `npm pack` does not apply it, so the override is
+  invisible until the tarball is already on the registry.) Consumers that want
+  to develop against the source alias it themselves — see the Vite config in
+  loupe-web and `scripts/sync-moderato.mjs` in loupe-frontend.
 
 ## [0.1.0]
 
