@@ -1,0 +1,87 @@
+---
+id: intro
+title: moderato
+sidebar_label: What this is
+slug: /
+hide_table_of_contents: false
+description: Content moderation, in tempo. Wrap any input, image picker or upload with allow / review / block screening.
+---
+
+# moderato
+
+Content moderation, in tempo. Wrap any input, image picker or upload with
+`allow` / `review` / `block` screening — OpenAI omni-moderation, your own
+endpoint, or offline rules.
+
+```bash
+npm install moderato
+```
+
+Zero runtime dependencies. ESM and CJS. Types for every entry point. React is
+an optional peer — the core and the server half never import it.
+
+## The problem, in one paragraph
+
+Someone types a slur into your username field. You want three things: they find
+out **now** rather than after filling in the rest of the form; the write is
+**refused by your server**, because anything a browser decides can be skipped
+with `curl`; and **nobody on your team gets paged**, because the obvious cases
+should not need a human and only the ambiguous ones should reach a queue.
+
+Those are three different jobs in three different places. moderato is all three,
+sharing one policy object so they cannot disagree.
+
+## The shape of it
+
+```tsx
+// 1 — the field. Instant, offline, your popup.
+const handle = useModeratedField({ engine, policy: POLICY_PRESETS.identity });
+
+<input {...handle.inputProps} />
+{handle.blocked && <YourDialog text={handle.message} />}
+```
+
+```ts
+// 2 — the write. The only screen that can actually refuse.
+const verdict = await guard(engine, { text: body }, { message: RULES_COPY });
+// throws ModerationError (422) on block; returns "review" / "allow" otherwise
+```
+
+```ts
+// 3 — the automation. High confidence acts; only the middle queues.
+createModerato({
+  provider: [wordlist, classifier],   // cheap first, stops at the first hit
+  policy: { blockScore: 0.92 },       // ≥ 0.92 is refused with no human
+  sink: (event) => metrics.record(event),
+});
+```
+
+:::info Numbers, not adjectives
+
+Most libraries in this space describe their accuracy with an adjective. This one
+publishes the measurement, the whole precision/recall curve, and every single
+case it gets wrong — see [Rehearsal metrics](./rehearsal.mdx). The first thing
+you will notice there is that the free offline layer alone catches barely half
+of what it should. That gap is the argument for the classifier behind it.
+
+:::
+
+## Where to go next
+
+| If you want to… | Read |
+| --- | --- |
+| have something working in five minutes | [Quickstart](./quickstart.md) |
+| understand *why* it is split in two | [Client or server?](./client-or-server.md) |
+| allow what your product allows, refuse the rest | [Your rules](./configuring.md) |
+| wrap an input field | [The field hook](./field-hook.md) |
+| refuse a write | [Server](./server.md) |
+| decide where the line goes | [Policy](./policy.md) |
+| type something and watch it get judged | [Playground](./playground.mdx) |
+| see whether any of this actually works | [Rehearsal metrics](./rehearsal.mdx) |
+| know what it deliberately does not do | [Limits](./limits.md) |
+
+## Anywhere text is public
+
+A comment box, a username, a product listing, a support ticket, a review, a
+class discussion board, a dating profile, a marketplace description. Different
+products; the same three problems.

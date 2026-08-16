@@ -1,0 +1,452 @@
+/**
+ * The site theme.
+ *
+ * Three rules held throughout:
+ *
+ * 1. **Roles, not hexes.** Every colour used anywhere is a token defined once
+ *    here, so light and dark swap in one place and a chart cannot drift from
+ *    the page it sits on.
+ * 2. **Dark mode is selected, not flipped.** The dark column is its own set
+ *    of steps chosen against the dark surface — the data-viz palette was
+ *    re-validated against `--surface-2` (#1c1f26) and passes every check in
+ *    both modes.
+ * 3. **Elevation by surface, not by shadow.** Three surfaces (page, card,
+ *    sunk) do the work borders and drop-shadows would otherwise do, which is
+ *    what keeps a page with six cards on it from looking like a dashboard.
+ */
+
+/* ─────────────────────────────  tokens  ───────────────────────────── */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --surface-0: #fdfdfc; /* page */
+  --surface-1: #ffffff; /* cards, code */
+  --surface-2: #f6f6f4; /* sunk: inputs, inline code, table heads */
+  --surface-3: #eeeeeb; /* hover */
+  --border: #e3e2dd;
+  --border-strong: #cfceC7;
+
+  /* ink */
+  --ink-1: #16150f;
+  --ink-2: #4a4942;
+  --ink-3: #75746b;
+
+  /* brand */
+  --brand: #1c5cab;
+  --brand-ink: #17508f;
+  --brand-wash: #eaf1fb;
+
+  --ifm-color-primary: var(--brand);
+  --ifm-color-primary-dark: #19529a;
+  --ifm-color-primary-darker: #184f91;
+  --ifm-color-primary-darkest: #144178;
+  --ifm-color-primary-light: #1f66bc;
+  --ifm-color-primary-lighter: #2069c5;
+  --ifm-color-primary-lightest: #2476dc;
+
+  /* ── data-viz roles (validated palette; see the dataviz method) ── */
+  --viz-surface: var(--surface-1);
+  --viz-surface-sunk: var(--surface-2);
+  --viz-border: var(--border);
+  --viz-text: var(--ink-1);
+  --viz-text-secondary: var(--ink-2);
+  --viz-text-muted: var(--ink-3);
+  --viz-grid: #eceae4;
+
+  --viz-series-1: #2a78d6; /* precision */
+  --viz-series-2: #eb6834; /* recall    */
+
+  --viz-good: #0ca30c;
+  --viz-warning: #fab219;
+  --viz-critical: #d03b3b;
+
+  --viz-seq-250: #86b6ef;
+  --viz-seq-450: #2a78d6;
+  --viz-seq-600: #184f95;
+  --viz-on-seq-strong: #ffffff;
+
+  /* ── typography ── */
+  --ifm-font-family-base: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ifm-font-family-monospace: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+    Consolas, "Liberation Mono", monospace;
+  --ifm-font-size-base: 17px;
+  --ifm-line-height-base: 1.7;
+  --ifm-heading-font-weight: 700;
+  --ifm-h1-font-size: 2.6rem;
+  --ifm-h2-font-size: 1.7rem;
+  --ifm-h3-font-size: 1.25rem;
+  --ifm-code-font-size: 88%;
+  --ifm-spacing-horizontal: 1.5rem;
+
+  /* ── chrome ── */
+  --ifm-background-color: var(--surface-0);
+  --ifm-navbar-background-color: color-mix(in srgb, var(--surface-0) 82%, transparent);
+  --ifm-navbar-shadow: none;
+  --ifm-navbar-height: 62px;
+  --ifm-toc-border-color: var(--border);
+  --ifm-hr-border-color: var(--border);
+  --ifm-table-border-color: var(--border);
+  --ifm-table-head-background: var(--surface-2);
+  --ifm-table-stripe-background: transparent;
+  --ifm-blockquote-color: var(--ink-2);
+  --ifm-blockquote-border-color: var(--border-strong);
+  --ifm-code-background: var(--surface-2);
+  --ifm-pre-background: var(--surface-1);
+  --ifm-menu-color: var(--ink-2);
+  --ifm-menu-color-background-active: var(--brand-wash);
+  --ifm-menu-color-background-hover: var(--surface-3);
+  --docusaurus-highlighted-code-line-bg: #eef3fa;
+  --ifm-breadcrumb-color-active: var(--brand);
+  --ifm-breadcrumb-item-background-active: var(--surface-2);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-0: #15171c; /* page */
+  --surface-1: #1c1f26; /* cards, code */
+  --surface-2: #23262f; /* sunk */
+  --surface-3: #2b2f39; /* hover */
+  --border: #2d313b;
+  --border-strong: #3d4250;
+
+  --ink-1: #f2f4f8;
+  --ink-2: #b6bcc9;
+  --ink-3: #868d9c;
+
+  --brand: #86b6ef;
+  --brand-ink: #b7d3f6;
+  --brand-wash: #1d2634;
+
+  --ifm-color-primary: var(--brand);
+  --ifm-color-primary-dark: #6da7ec;
+  --ifm-color-primary-darker: #5598e7;
+  --ifm-color-primary-darkest: #3987e5;
+  --ifm-color-primary-light: #9ec5f4;
+  --ifm-color-primary-lighter: #b7d3f6;
+  --ifm-color-primary-lightest: #cde2fb;
+
+  --viz-grid: #282c35;
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+
+  /* Status steps are fixed across modes by design — all four clear 3:1 on the
+     dark surface, and a status colour that moved would stop being one. */
+  --viz-good: #0ca30c;
+  --viz-warning: #fab219;
+  --viz-critical: #d03b3b;
+
+  --viz-seq-250: #256abf;
+  --viz-seq-450: #3987e5;
+  --viz-seq-600: #9ec5f4;
+  --viz-on-seq-strong: #10131a;
+
+  --docusaurus-highlighted-code-line-bg: #232b38;
+}
+
+/* ─────────────────────────────  base  ───────────────────────────── */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--surface-0);
+  color: var(--ink-1);
+  letter-spacing: -0.003em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  letter-spacing: -0.022em;
+  color: var(--ink-1);
+}
+.markdown > h1 {
+  margin-bottom: 1.25rem;
+}
+.markdown > h2 {
+  margin-top: 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+}
+.markdown > h2:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.markdown > h3 {
+  margin-top: 2rem;
+}
+.markdown p,
+.markdown li {
+  color: var(--ink-1);
+}
+.markdown strong {
+  font-weight: 650;
+}
+.markdown a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Lead paragraph — the sentence under an h1 that says what the page is for. */
+.markdown > h1 + p {
+  font-size: 1.13rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────────  navbar  ───────────────────────────── */
+
+.navbar {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+.navbar__title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.navbar__link {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.navbar__link--active {
+  color: var(--brand);
+}
+.navbar__brand:hover {
+  opacity: 0.85;
+}
+
+/* ─────────────────────────────  sidebar  ───────────────────────────── */
+
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--border) !important;
+}
+.menu {
+  padding: 1.25rem 0.75rem !important;
+  font-size: 0.9375rem;
+}
+.menu__link {
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+  font-weight: 450;
+  line-height: 1.4;
+}
+.menu__link--active:not(.menu__link--sublist) {
+  font-weight: 600;
+  color: var(--brand);
+}
+.menu__list-item-collapsible > .menu__link {
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.menu__list .menu__list {
+  padding-left: 0.5rem;
+  margin-left: 0.35rem;
+  border-left: 1px solid var(--border);
+}
+
+/* Table of contents */
+.table-of-contents {
+  font-size: 0.8125rem;
+  border-left-color: var(--border);
+}
+.table-of-contents__link--active {
+  font-weight: 600;
+}
+
+/* ─────────────────────────────  code  ───────────────────────────── */
+
+.markdown :not(pre) > code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.1em 0.36em;
+  font-weight: 500;
+}
+div[class^="codeBlockContainer"] {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border);
+  box-shadow: none !important;
+  margin-bottom: 1.4rem;
+}
+div[class^="codeBlockTitle"] {
+  background: var(--surface-2) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  letter-spacing: 0.01em;
+}
+[data-theme="dark"] div[class^="codeBlockContainer"] pre {
+  background: var(--surface-1) !important;
+}
+[data-theme="light"] div[class^="codeBlockContainer"] pre {
+  background: #fbfbfa !important;
+}
+
+/* ─────────────────────────────  tables  ───────────────────────────── */
+
+.markdown table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: 0.925rem;
+}
+.markdown table thead tr {
+  border: none;
+  background: var(--surface-2);
+}
+.markdown table th {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border: none;
+  border-bottom: 1px solid var(--border);
+}
+.markdown table td {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.markdown table tbody tr:last-child td {
+  border-bottom: none;
+}
+.markdown table tbody tr {
+  background: transparent;
+}
+.markdown table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+/* ─────────────────────────────  admonitions  ───────────────────────────── */
+/* Softer than the Docusaurus default: a wash, a left rule, no heavy border. */
+
+.theme-admonition {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  background: var(--surface-2);
+  padding: 1rem 1.15rem;
+}
+.theme-admonition .admonitionHeading_node_modules-\@docusaurus-theme-classic-lib-theme-Admonition-Layout-styles-module,
+.theme-admonition div[class*="admonitionHeading"] {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.theme-admonition p:last-child {
+  margin-bottom: 0;
+}
+.theme-admonition-note,
+.theme-admonition-info {
+  border-left-color: var(--viz-series-1);
+  background: var(--brand-wash);
+}
+.theme-admonition-tip {
+  border-left-color: var(--viz-good);
+}
+.theme-admonition-warning,
+.theme-admonition-caution {
+  border-left-color: var(--viz-warning);
+}
+.theme-admonition-danger {
+  border-left-color: var(--viz-critical);
+}
+
+/* ─────────────────────────────  shared bits  ───────────────────────────── */
+
+.mdCard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.15rem 1.25rem;
+}
+
+.mdMuted {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Wide content scrolls inside its own box; the page body never does. */
+.mdScroll {
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+
+table th,
+table td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Docusaurus's pagination cards, softened to match. */
+.pagination-nav__link {
+  border-color: var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+}
+.pagination-nav__link:hover {
+  border-color: var(--border-strong);
+}
+
+/* Focus, once, for everything. */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── code inside headings ── */
+/* A heading that names an API is monospace, not a chip. The default inline
+   code treatment (background + border) at h1 size renders as a grey slab
+   the width of the page. */
+.markdown h1 code,
+.markdown h2 code,
+.markdown h3 code,
+.markdown h4 code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-weight: inherit;
+  font-size: 0.9em;
+  letter-spacing: -0.02em;
+}
+
+/* The landing page is its own thing — a breadcrumb trail from the home icon
+   to the home page is pure noise. */
+.docs-doc-id-intro nav[aria-label="Breadcrumbs"] {
+  display: none;
+}
+.docs-doc-id-intro .theme-doc-markdown > .markdown > h2:first-of-type {
+  margin-top: 1rem;
+}

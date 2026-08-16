@@ -20,7 +20,25 @@ export interface Verdict {
   score: number;
   /** Human-readable note — why the verdict is what it is. */
   detail?: string;
+  /**
+   * Why the policy landed here. Automation needs to tell a
+   * zero-tolerance refusal apart from a confidence-band one apart from a
+   * provider outage — they deserve different follow-ups.
+   */
+  rule?: VerdictRule;
+  /** The category that drove the action, if one did. */
+  primary?: string;
+  /** True when no screening ran (no provider, or nothing to screen). */
+  screened?: boolean;
 }
+
+export type VerdictRule =
+  | "clean"
+  | "zero-tolerance"
+  | "block-score"
+  | "flagged"
+  | "failed"
+  | "not-screened";
 
 export const blocked = (v: Verdict): boolean => v.action === BLOCK;
 export const needsReview = (v: Verdict): boolean =>
@@ -68,10 +86,18 @@ export interface ScreenInput {
   videos?: Blob[];
 }
 
+/** Per-category threshold overrides. Undefined members fall back to the
+ *  policy-wide `reviewScore` / `blockScore`. */
+export interface CategoryThresholds {
+  review?: number;
+  block?: number;
+}
+
 export interface PolicyConfig {
   /**
-   * A hit here refuses outright. Keep it short: these are the categories
-   * where "publish and review later" is not an acceptable position.
+   * A hit here refuses outright, at any score. Keep it short: these are the
+   * categories where "publish and review later" is not an acceptable
+   * position.
    */
   zeroTolerance?: Iterable<string>;
   /**
@@ -79,6 +105,16 @@ export interface PolicyConfig {
    * it — the threshold for a *human* to glance at something.
    */
   reviewScore?: number;
+  /**
+   * Score at or above which ANY category refuses outright, not just the
+   * zero-tolerance ones. This is the automation dial: the band between
+   * `reviewScore` and `blockScore` is what a human actually sees, and
+   * lowering `blockScore` trades queue volume for false refusals.
+   * Undefined means "only zeroTolerance blocks".
+   */
+  blockScore?: number;
+  /** Per-category overrides, canonical names ("hate/threatening"). */
+  categories?: Record<string, CategoryThresholds>;
 }
 
 /** What to do when the provider errors, times out, or can't run. */
@@ -91,13 +127,48 @@ export interface VideoConfig {
   maxDimension?: number;
 }
 
+/**
+ * One screening, as it happened — the record automation is built on.
+ * Emitted for every screen() that actually ran a provider, allow included:
+ * a queue you can only see the bad half of is a queue you cannot tune.
+ */
+export interface ModerationEvent {
+  verdict: Verdict;
+  /** What was screened. Text is truncated; image bytes are never included. */
+  input: { text?: string; imageCount: number };
+  /** Provider that produced it, or "cache". */
+  provider: string;
+  /** Wall-clock time the screen took, ms. */
+  durationMs: number;
+  /** Whatever the caller passed as `context` to screen(). */
+  context?: unknown;
+}
+
+/**
+ * Where screenings go after they're decided — your log, your review queue,
+ * your metrics. Never awaited by the engine and never allowed to throw
+ * into it: telemetry must not be able to fail a publish.
+ */
+export type ModerationSink = (event: ModerationEvent) => void | Promise<void>;
+
+export interface CacheConfig {
+  /** Max distinct text screenings kept. 0 disables. Default 200. */
+  maxEntries?: number;
+  /** How long an entry stays fresh, ms. Default 60_000. */
+  ttlMs?: number;
+}
+
 export interface ModeratoConfig {
   /**
    * The classifier. Omit it and screen() allows everything — that is the
    * server-authoritative mode: the client wraps UX around the *server's*
    * refusals and does no screening of its own.
+   *
+   * An array is a CHAIN: cheap-and-local first, expensive-and-remote last,
+   * short-circuiting as soon as one of them flags something. See
+   * `chainProviders`.
    */
-  provider?: ModerationProvider;
+  provider?: ModerationProvider | ModerationProvider[];
   policy?: PolicyConfig;
   /** Wall-clock budget for one provider call, ms. */
   timeoutMs?: number;
@@ -108,4 +179,13 @@ export interface ModeratoConfig {
    */
   failMode?: FailMode;
   video?: VideoConfig;
+  /**
+   * Memoise text-only screenings. A field hook re-screens on every pause in
+   * typing, and people retype the same draft constantly — without this you
+   * pay the provider for the same sentence a dozen times. Images are never
+   * cached (hashing them costs more than it saves).
+   */
+  cache?: CacheConfig | false;
+  /** Where decided screenings go. See `ModerationSink`. */
+  sink?: ModerationSink;
 }

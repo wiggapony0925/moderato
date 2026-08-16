@@ -15,28 +15,57 @@ export {
 } from "./types.js";
 export type {
   Action,
+  CacheConfig,
+  CategoryThresholds,
   FailMode,
   ImagePart,
   ImageSource,
+  ModerationEvent,
   ModerationProvider,
+  ModerationSink,
   ModeratoConfig,
   NormalizedInput,
   PolicyConfig,
   ProviderResult,
   ScreenInput,
   Verdict,
+  VerdictRule,
   VideoConfig,
 } from "./types.js";
 
 export {
+  DEFAULT_BLOCK_SCORE,
   DEFAULT_REFUSAL_MESSAGE,
   DEFAULT_REVIEW_SCORE,
   DEFAULT_ZERO_TOLERANCE,
+  POLICY_PRESETS,
+  UNIVERSAL_ZERO_TOLERANCE,
   canonical,
   decide,
 } from "./policy.js";
 
-export { DEFAULT_TIMEOUT_MS, Moderato, createModerato } from "./engine.js";
+export { defineModeration } from "./define.js";
+export type {
+  Audience,
+  CategoryRule,
+  Moderation,
+  ModerationConfig,
+  PersonalDataName,
+  SurfaceConfig,
+  SurfaceKind,
+  Tolerance,
+} from "./define.js";
+
+export {
+  DEFAULT_CACHE_ENTRIES,
+  DEFAULT_CACHE_TTL_MS,
+  DEFAULT_TIMEOUT_MS,
+  Moderato,
+  createModerato,
+} from "./engine.js";
+export type { ScreenOptions, ScreenResult } from "./engine.js";
+
+export { TtlCache } from "./cache.js";
 
 export {
   DEFAULT_REFUSAL_FALLBACK,
@@ -49,16 +78,30 @@ export { OPENAI_MODERATION_MODEL, openAIProvider } from "./providers/openai.js";
 export type { OpenAIProviderOptions } from "./providers/openai.js";
 export { httpProvider } from "./providers/http.js";
 export type { HttpProviderOptions } from "./providers/http.js";
+export { chainProviders, mergeResults } from "./providers/chain.js";
+export {
+  PII_CATEGORIES,
+  findPii,
+  luhn,
+  piiProvider,
+  redactPii,
+} from "./providers/pii.js";
+export type { PiiCategory, PiiMatch, PiiOptions } from "./providers/pii.js";
+export type { ChainOptions } from "./providers/chain.js";
 export { localProvider } from "./providers/local.js";
 export type { LocalRule } from "./providers/local.js";
 export {
   PROFANITY_PRESET,
   PROFANITY_PRESET_STRICT,
+  findTerms,
   wordlistProvider,
 } from "./providers/wordlist.js";
-export type { WordlistEntry } from "./providers/wordlist.js";
+export type { WordlistEntry, WordlistOptions } from "./providers/wordlist.js";
 export { EN_PROFANITY } from "./vocab/en.js";
+export { COMPOUND_HOMOGRAPHS, COMPOUND_PARTS } from "./vocab/common.js";
 export { normalizeTokens } from "./normalize.js";
+export { hashes, labelled, maskSpans } from "./mask.js";
+export type { Mask, Span } from "./mask.js";
 export type { NormalizedToken } from "./normalize.js";
 export { mockProvider } from "./providers/mock.js";
 export type { MockProviderOptions } from "./providers/mock.js";

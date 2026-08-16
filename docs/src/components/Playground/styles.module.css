@@ -1,0 +1,637 @@
+/**
+ * The playground board.
+ *
+ * The grid is the surface the panels sit on, not decoration wrapped around
+ * them: it is drawn at the same 24px the drag snapping uses, so a card you
+ * drop lines up with something you can see. Everything else is deliberately
+ * flat — one border per panel, no nested boxes, no shadow stack. A panel
+ * that contains three sub-cards is not organised, it is just fenced.
+ */
+
+.board {
+  margin: 1.75rem 0 2rem;
+}
+
+.boardHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+}
+.boardHint span {
+  flex: 1;
+  min-width: 12rem;
+}
+
+/* The grid canvas. 24px cells — the same step the drag snaps to. */
+.grid {
+  --grid-line: color-mix(in srgb, var(--border) 55%, transparent);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 0.9rem;
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--surface-0);
+  /* Softer than a border: the grid is a surface to land on, not a table. */
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+[data-theme="dark"] .grid {
+  background-color: #12141a;
+}
+
+/* ── panel ── */
+
+.panel {
+  position: relative;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem 1rem;
+  align-self: start;
+  will-change: transform;
+}
+.panel[data-dragging] {
+  border-color: var(--brand);
+  box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.3);
+  cursor: grabbing;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+.panelTitles {
+  flex: 1;
+  min-width: 0;
+}
+.panelTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.014em;
+}
+.panelHint {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.panelActions {
+  display: flex;
+  gap: 0.35rem;
+  flex: none;
+}
+
+/* The grab handle. Six dots is the universal "pick me up" affordance, and it
+   is a real button so a keyboard can move the panel too. */
+.grip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.05rem;
+  border-radius: 5px;
+  cursor: grab;
+  color: var(--ink-3);
+  touch-action: none;
+}
+.grip:hover {
+  background: var(--surface-2);
+  color: var(--ink-1);
+}
+.grip:active {
+  cursor: grabbing;
+}
+.gripDots {
+  width: 10px;
+  height: 14px;
+  background-image: radial-gradient(currentColor 1.1px, transparent 1.2px);
+  background-size: 5px 5px;
+  opacity: 0.85;
+}
+
+.snapBack {
+  flex: none;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.snapBack:hover {
+  color: var(--ink-1);
+  border-color: var(--border-strong);
+}
+
+/* ── surface picker ── */
+
+.surfaces {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+.surface,
+.surfaceOn {
+  text-align: left;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink-1);
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.surface:hover {
+  border-color: var(--border-strong);
+}
+.surfaceOn {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+}
+.surfaceLabel {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.surfaceHint {
+  font-size: 0.775rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+/* ── input ── */
+
+.input,
+.noteInput {
+  width: 100%;
+  font: inherit;
+  color: var(--ink-1);
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  resize: vertical;
+}
+.input {
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.6rem 0.75rem;
+}
+.noteInput {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.7rem;
+  margin: 0.15rem 0;
+}
+.input:focus-visible,
+.noteInput:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.input::placeholder,
+.noteInput::placeholder {
+  color: var(--ink-3);
+}
+
+.samples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+.samplesLabel {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  margin-right: 0.15rem;
+}
+.sample {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sample:hover {
+  color: var(--ink-1);
+  border-color: var(--border-strong);
+}
+
+/* ── verdict ── */
+
+.rule {
+  height: 3px;
+  border-radius: 999px;
+  margin-bottom: 0.85rem;
+}
+.rule_allow {
+  background: var(--viz-good);
+}
+.rule_review {
+  background: var(--viz-warning);
+}
+.rule_block {
+  background: var(--viz-critical);
+}
+
+.verdictHead {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+.verdictCopy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.verdictWhat {
+  margin: 0;
+  font-weight: 620;
+  font-size: 0.925rem;
+  line-height: 1.45;
+}
+.verdictWhy {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  font-family: var(--ifm-font-family-monospace);
+  word-break: break-word;
+}
+
+/* ── prompt ── */
+
+.prompt {
+  margin-top: 0.95rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 0.55rem;
+}
+.promptQ {
+  margin: 0;
+  font-weight: 620;
+  font-size: 0.9rem;
+}
+.promptRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.yes,
+.no,
+.ghost,
+.choice,
+.choiceOn {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 560;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-1);
+  color: var(--ink-1);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.yes {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+  font-weight: 630;
+}
+[data-theme="dark"] .yes {
+  color: #10131a;
+}
+.ghost {
+  font-size: 0.8rem;
+  padding: 0.32rem 0.7rem;
+  border-color: var(--border);
+  color: var(--ink-2);
+}
+.ghost:hover:not(:disabled) {
+  color: var(--ink-1);
+  border-color: var(--border-strong);
+}
+.yes:disabled,
+.no:disabled,
+.ghost:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.choice,
+.choiceOn {
+  padding: 0.28rem 0.5rem;
+}
+.choiceOn {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+}
+
+.saved {
+  margin: 0.7rem 0 0;
+  font-size: 0.82rem;
+  color: var(--viz-good);
+  font-weight: 620;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ── corpus table ── */
+
+.table {
+  width: 100%;
+  font-size: 0.8125rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table th {
+  text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 650;
+  padding: 0 0.5rem 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.table td {
+  padding: 0.45rem 0.5rem 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.cellText {
+  max-width: 12rem;
+  word-break: break-word;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.76rem;
+}
+.cellNote {
+  color: var(--ink-2);
+  max-width: 11rem;
+}
+.remove {
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  border: none;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+.remove:hover {
+  color: var(--viz-critical);
+  background: var(--surface-2);
+}
+
+.empty {
+  margin: 0;
+  padding: 1.1rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── mobile ── */
+/* Dragging a panel around a single-column phone layout is not a feature, it
+   is a way to lose one off the side of the screen. So on small viewports the
+   grid stays a plain stack and the handle is hidden. */
+@media (max-width: 760px) {
+  .board {
+    margin: 1.25rem 0 1.5rem;
+  }
+  .grid {
+    padding: 0.55rem;
+    /* Half-size cells: a 24px grid on a 390px screen is a wall of lines. */
+    background-size: 48px 48px;
+  }
+  /* Dragging works here — offsets are clamped to the board, so a panel
+     cannot be flung somewhere unreachable. The handle gets a bigger touch
+     target, because a 24px hit area is a 24px hit area. */
+  .grip {
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -0.35rem 0 0 -0.35rem;
+  }
+  .boardHint span {
+    display: none;
+  }
+  .boardHint {
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+  .panelHead {
+    gap: 0.4rem;
+  }
+  .panelActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .cellText,
+  .cellNote {
+    max-width: 7rem;
+  }
+  /* Full screen on a phone is the main event, not an escape hatch. */
+  .boardFocused {
+    padding: 0.5rem;
+  }
+  .boardFocused .boardHint {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.35rem 0;
+    background: var(--surface-0);
+  }
+}
+
+/* ── connectors ── */
+
+.wires {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+.wire {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.45;
+  stroke-dasharray: 5 6;
+}
+.wireDot {
+  fill: var(--brand);
+  opacity: 0.8;
+}
+/* The panels sit above the wires; the wires leave from behind them. */
+.panel {
+  z-index: 1;
+}
+
+/* ── rules panel ──
+   A row is a label and a control on one line, wrapping to two when the panel
+   is narrow. No boxes: the panel already has a border, and a setting inside a
+   card inside a card is not clearer, just fenced. */
+
+.ruleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.9rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.ruleRow:first-of-type {
+  padding-top: 0;
+}
+.ruleLabels {
+  display: grid;
+  gap: 0.1rem;
+  flex: 1 1 11rem;
+  min-width: 0;
+}
+.ruleName {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.ruleHint {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* Three-way switch. One track, one border — the selected segment is the
+   only thing that carries colour. */
+.segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.seg,
+.segOn {
+  font: inherit;
+  font-size: 0.75rem;
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.6rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.seg:hover {
+  color: var(--ink-1);
+}
+.segOn {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+.seg:focus-visible,
+.segOn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.config {
+  margin: 0.35rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.7625rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--ink-2);
+}
+
+/* Touch targets get a floor on small screens; small-caps at 12px is legible
+   but a 22px-tall button is not tappable. */
+@media (max-width: 600px) {
+  .seg,
+  .segOn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8125rem;
+  }
+  .ruleRow {
+    align-items: flex-start;
+  }
+  /* Full width, split evenly — two segments pinned to opposite edges of a
+     wide track read as two unrelated buttons, not one switch. */
+  .segmented {
+    flex: 1 1 100%;
+  }
+  .seg,
+  .segOn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ── full screen ── */
+
+.boardFocused {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.boardFocused .grid {
+  flex: 1;
+  align-content: start;
+}

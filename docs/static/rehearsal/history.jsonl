@@ -1,0 +1,12 @@
+{"at":"2026-08-16T00:00:00.000Z","version":"1.0.0","provider":"wordlist","cases":52,"precision":1,"recall":0.529,"f1":0.692,"accuracy":0.692,"autoHandled":0.904}
+{"at":"2026-08-16T19:48:09.578Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:09:18.546Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:16:42.955Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:28:17.786Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:38:45.281Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:41:43.022Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:43:21.849Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T20:44:56.461Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T21:18:47.796Z","version":"1.0.0","provider":"wordlist / wordlist+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.75,"autoHandled":0.883}
+{"at":"2026-08-16T21:19:34.424Z","version":"1.0.0","provider":"wordlist+compound / wordlist+compound+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.767,"autoHandled":0.867}
+{"at":"2026-08-16T21:21:39.918Z","version":"1.0.0","provider":"wordlist+compound / wordlist+compound+fused","cases":60,"precision":1,"recall":0.65,"f1":0.788,"accuracy":0.767,"autoHandled":0.867}

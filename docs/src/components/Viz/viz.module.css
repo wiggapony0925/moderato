@@ -1,0 +1,676 @@
+/* Chart chrome. Roles only — every colour comes from a token in custom.css
+   so light and dark swap in one place. */
+
+.figure {
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem 1.15rem;
+  background: var(--viz-surface);
+  border: 1px solid var(--viz-border);
+  border-radius: 10px;
+}
+
+.figCaption {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--viz-text-secondary);
+}
+.figCaption strong {
+  color: var(--viz-text);
+  font-weight: 600;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+}
+
+.axis {
+  fill: var(--viz-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.axisTitle {
+  fill: var(--viz-text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.endLabel {
+  fill: var(--viz-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  margin-top: 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--viz-text-secondary);
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.legendReadout {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--viz-text);
+}
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  flex: none;
+}
+
+/* ── threshold slider ── */
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--viz-border);
+}
+.sliderLabel {
+  font-size: 0.8125rem;
+  font-family: var(--ifm-font-family-monospace);
+  color: var(--viz-text-secondary);
+  flex: none;
+}
+.slider {
+  flex: 1;
+  accent-color: var(--viz-series-1);
+  min-width: 140px;
+}
+.sliderValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 3.2rem;
+  text-align: right;
+  color: var(--viz-text);
+}
+
+/* ── stacked outcome bar ── */
+
+.stack {
+  display: flex;
+  /* 2px of surface between segments: the boundary reads without a border,
+     and adjacent fills never blend into one block. */
+  gap: 2px;
+  height: 26px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.stackSegment {
+  display: block;
+  min-width: 2px;
+}
+.stackSegment:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.stackSegment:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.stackLegend {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.stackLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--viz-text-secondary);
+}
+.stackLegendItem strong {
+  color: var(--viz-text);
+  font-weight: 600;
+}
+.stackIcon {
+  font-weight: 700;
+  color: var(--viz-text-secondary);
+  width: 1ch;
+}
+.stackCount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── stat tiles ── */
+
+.tileRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+.tile {
+  background: var(--viz-surface);
+  border: 1px solid var(--viz-border);
+  border-left: 3px solid var(--viz-border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.tile_good {
+  border-left-color: var(--viz-good);
+}
+.tile_warning {
+  border-left-color: var(--viz-warning);
+}
+.tile_critical {
+  border-left-color: var(--viz-critical);
+}
+.tileLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--viz-text-muted);
+}
+.tileValue {
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--viz-text);
+}
+.tileCaption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--viz-text-secondary);
+}
+
+/* ── action badge ── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--viz-border);
+  background: var(--viz-surface-sunk);
+  color: var(--viz-text);
+}
+.badgeCompact {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+}
+.badgeIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 999px;
+  font-size: 0.7em;
+  font-weight: 800;
+  color: #fff;
+}
+.badge_allow .badgeIcon {
+  background: var(--viz-good);
+}
+.badge_review .badgeIcon {
+  background: var(--viz-warning);
+  color: #1a1a19;
+}
+.badge_block .badgeIcon {
+  background: var(--viz-critical);
+}
+.badge_allow {
+  border-color: color-mix(in oklab, var(--viz-good) 40%, var(--viz-border));
+}
+.badge_review {
+  border-color: color-mix(in oklab, var(--viz-warning) 40%, var(--viz-border));
+}
+.badge_block {
+  border-color: color-mix(in oklab, var(--viz-critical) 40%, var(--viz-border));
+}
+
+/* ── score bars ── */
+
+.bars {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--viz-border);
+}
+.barsHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--viz-text-muted);
+  margin-bottom: 0.6rem;
+}
+.rulePill {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  background: var(--viz-surface-sunk);
+  border: 1px solid var(--viz-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.barList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(6rem, 10rem) 1fr 4rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+}
+.barLabel {
+  color: var(--viz-text-secondary);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barTrack {
+  height: 10px;
+  background: var(--viz-surface-sunk);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.barFill {
+  display: block;
+  height: 100%;
+  /* 4px rounded data-end, anchored square to the baseline. */
+  border-radius: 0 4px 4px 0;
+}
+.barValue {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--viz-text);
+}
+
+/* ── shared figure footer ── */
+
+.figFoot {
+  margin: 0.9rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--viz-border);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--viz-text-secondary);
+}
+.figFoot strong {
+  color: var(--viz-text);
+  font-weight: 640;
+}
+
+/* ── ablation ── */
+
+.ablation {
+  display: grid;
+  gap: 0.9rem;
+}
+.ablationRow {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 0.5rem 1.4rem;
+  align-items: center;
+}
+.ablationHead {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.ablationLabel {
+  font-weight: 640;
+  font-size: 0.95rem;
+  letter-spacing: -0.012em;
+  color: var(--viz-text);
+}
+.ablationDetail {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--viz-text-muted);
+}
+.ablationBars {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.ablationBar {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr) 2.8rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+}
+.ablationBarLabel {
+  color: var(--viz-text-muted);
+  font-size: 0.75rem;
+}
+.ablationTrack {
+  height: 12px;
+  background: var(--viz-surface-sunk);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ablationFill {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.ablationValue {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 620;
+  color: var(--viz-text);
+}
+
+@media (max-width: 720px) {
+  .ablationRow {
+    grid-template-columns: 1fr;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--viz-border);
+  }
+  .ablationRow:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+/* ── evasion matrix ── */
+
+.matrix,
+.confusion {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+.matrix th,
+.matrix td {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--viz-border);
+  vertical-align: middle;
+}
+.matrix thead th {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--viz-text-muted);
+  font-weight: 650;
+}
+.matrix tbody tr:last-child th,
+.matrix tbody tr:last-child td {
+  border-bottom: none;
+}
+.matrixName {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  font-weight: 620;
+  color: var(--viz-text);
+  white-space: nowrap;
+}
+.matrixExample code {
+  font-size: 0.78rem;
+  color: var(--viz-text-secondary);
+}
+.matrixCount {
+  font-variant-numeric: tabular-nums;
+  color: var(--viz-text-muted);
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 620;
+  white-space: nowrap;
+  border: 1px solid var(--viz-border);
+  background: var(--viz-surface-sunk);
+  color: var(--viz-text);
+}
+.chipIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 999px;
+  font-size: 0.66em;
+  font-weight: 800;
+  color: #fff;
+}
+.chip_good .chipIcon {
+  background: var(--viz-good);
+}
+.chip_warning .chipIcon {
+  background: var(--viz-warning);
+  color: #15171c;
+}
+.chip_critical .chipIcon {
+  background: var(--viz-critical);
+}
+
+/* ── confusion grid ── */
+
+.confusion th,
+.confusion td {
+  padding: 0.22rem;
+  text-align: center;
+}
+.confusion thead th {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--viz-text-muted);
+  font-weight: 650;
+  padding-bottom: 0.45rem;
+}
+.confusionAxis {
+  font-size: 0.68rem !important;
+  color: var(--viz-text-muted);
+  padding-bottom: 0.2rem !important;
+}
+.confusionRowHead {
+  text-align: right !important;
+  padding-right: 0.7rem !important;
+  font-size: 0.78rem;
+  font-weight: 620;
+  color: var(--viz-text-secondary);
+  white-space: nowrap;
+}
+.cell {
+  display: grid;
+  place-items: center;
+  min-width: 3.4rem;
+  height: 3rem;
+  border-radius: 7px;
+  font-size: 1.05rem;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  /* 2px of surface between cells so adjacent shades stay two cells. */
+  outline: 2px solid var(--viz-surface);
+}
+.cellDiagonal {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--viz-good) 55%, transparent);
+}
+
+/* ── pipeline walkthrough ── */
+
+.pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.stage {
+  display: grid;
+  grid-template-columns: 2.1rem minmax(0, 1fr);
+  gap: 0.95rem;
+  padding-bottom: 1.35rem;
+}
+.stage:last-child {
+  padding-bottom: 0;
+}
+.stageMark {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  gap: 0.35rem;
+}
+.stageNum {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--viz-border);
+  background: var(--viz-surface-sunk);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--viz-text-secondary);
+}
+.stageLine {
+  width: 1px;
+  height: 100%;
+  min-height: 1rem;
+  background: var(--viz-border);
+}
+.stageBody {
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+.stageTitle {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+}
+.stageValue {
+  display: block;
+  overflow-x: auto;
+  background: var(--viz-surface-sunk);
+  border: 1px solid var(--viz-border);
+  border-radius: 7px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.86rem;
+  color: var(--viz-text);
+  white-space: nowrap;
+}
+.stageNote {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--viz-text-secondary);
+}
+
+/* ── mobile ── */
+
+@media (max-width: 640px) {
+  .figure {
+    padding: 0.9rem 0.95rem 1rem;
+    border-radius: 10px;
+  }
+  .svg {
+    min-width: 460px;
+  }
+  .tileRow {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  .tileValue {
+    font-size: 1.6rem;
+  }
+  .sliderRow {
+    flex-wrap: wrap;
+  }
+  .barRow {
+    grid-template-columns: minmax(4.5rem, 7rem) 1fr 3rem;
+  }
+  .cell {
+    min-width: 2.6rem;
+    height: 2.4rem;
+    font-size: 0.9rem;
+  }
+  .stage {
+    grid-template-columns: 1.7rem minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+  .stageValue {
+    font-size: 0.78rem;
+  }
+}
+
+/* ── chart tooltip ── */
+
+.plot {
+  position: relative;
+}
+.tooltip {
+  position: absolute;
+  top: 0.6rem;
+  pointer-events: none;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--viz-border);
+  background: var(--viz-surface);
+  box-shadow: 0 8px 22px -10px rgb(0 0 0 / 0.35);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  z-index: 2;
+}
+.tooltipHead {
+  font-weight: 650;
+  color: var(--viz-text);
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--viz-border);
+  margin-bottom: 0.15rem;
+}
+.tooltipRow {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--viz-text-secondary);
+}
+.tooltipRow b {
+  color: var(--viz-text);
+  font-variant-numeric: tabular-nums;
+}
+.swatchGhost {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px dashed var(--viz-text-muted);
+}

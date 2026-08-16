@@ -1,0 +1,104 @@
+name: Deploy docs (GitHub Pages)
+
+# The no-computer path.
+#
+# Cloud Run needs `gcloud`, a signed-in machine, and credentials. This needs
+# a browser, once: Pages has to be enabled for the repository, and on a
+# private repository that also needs a paid plan. After that every push
+# builds and publishes — no secrets, no CLI, no local checkout.
+#
+# The first step tries to enable Pages itself and prints exactly what to tap
+# if it cannot.
+#
+# `workflow_dispatch` means you can also deploy on demand from the Actions
+# tab, which is two taps in the GitHub mobile app.
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # First, before anything is built, so a repository that cannot publish
+      # says so in ten seconds instead of after a four-minute build.
+      #
+      # `enablement: true` asks GitHub to turn Pages on. It works on some
+      # repositories and not others — creating a Pages site needs repo-admin
+      # rights, and GITHUB_TOKEN cannot be granted those. So it is allowed to
+      # fail, and the step below turns the API's "Resource not accessible by
+      # integration" into something a person can act on.
+      - uses: actions/configure-pages@v5
+        id: pages
+        continue-on-error: true
+        with:
+          enablement: true
+
+      - name: Pages has to be turned on once
+        if: steps.pages.outcome == 'failure'
+        run: |
+          echo "::error::GitHub Pages is not enabled for this repository, and this workflow is not allowed to enable it."
+          echo ""
+          echo "Two things to check, in this order:"
+          echo ""
+          echo "1. Is the repository private? Pages on a PRIVATE repository needs"
+          echo "   GitHub Pro, Team or Enterprise. On the free plan it is public"
+          echo "   repositories only — so either make the repository public"
+          echo "   (Settings -> General -> Danger Zone -> Change visibility) or"
+          echo "   upgrade the plan. moderato is meant to be published to npm, so"
+          echo "   public is usually the answer."
+          echo ""
+          echo "2. Then turn Pages on, once:"
+          echo "   Settings -> Pages -> Build and deployment -> Source -> GitHub Actions"
+          echo ""
+          echo "Re-run afterwards: Actions -> Deploy docs (GitHub Pages) -> Run workflow."
+          echo "Both are a few taps in a phone browser. After that every push publishes."
+          exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      # The docs import the real built package, so the library has to exist
+      # before the site can resolve `moderato` to anything.
+      - run: npm run build
+      - run: npm run check:docs
+
+      - run: npm ci --prefix docs
+      - name: Build the site
+        env:
+          # Pages serves from https://<user>.github.io/<repo>/, so the site
+          # has to be built knowing it lives under a sub-path. Cloud Run
+          # serves from the root and sets neither of these.
+          DOCS_URL: ${{ steps.pages.outputs.origin || format('https://{0}.github.io', github.repository_owner) }}
+          DOCS_BASE_URL: /${{ github.event.repository.name }}/
+        run: npm --prefix docs run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

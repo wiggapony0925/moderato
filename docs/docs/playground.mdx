@@ -1,0 +1,104 @@
+---
+id: playground
+title: Playground
+hide_table_of_contents: true
+---
+
+import BrowserOnly from "@docusaurus/BrowserOnly";
+
+# Playground
+
+Type anything you like and watch what happens to it. Change the rules until the
+verdicts match what your product wants, and copy the config out. Then tell us
+where we got it wrong, which is the part that actually helps.
+
+Drag the panels around by the handle in their corner if the layout is not where
+you want it; the board remembers.
+
+<BrowserOnly fallback={<p>Loading the playground…</p>}>
+  {() => {
+    const Playground = require("@site/src/components/Playground").default;
+    return <Playground />;
+  }}
+</BrowserOnly>
+
+---
+
+## What is actually running
+
+The **offline wordlist provider**, and nothing else. This is a static site: no
+server, no vendor key, no network call. So what you are seeing is the free
+instant layer — the one that runs in your users' browsers before any request is
+made.
+
+That means it will catch `n1gg3r` and `f u c k` and miss `I hate black people`
+entirely, because there is no listed word in that sentence. This is not a bug
+being hidden from you; it is the honest shape of the tool, and it is the whole
+argument for putting a classifier behind your own endpoint. The
+[metrics page](./rehearsal.mdx) puts a number on the gap.
+
+## Why we ask whether it was right
+
+Accuracy is not really a property of the code. It is a relationship between the
+code and one particular product's idea of what is acceptable, and the only way
+to measure that is against examples a person has judged.
+
+Which makes disagreements the valuable half. When you tell us a verdict is
+wrong, that example goes into the corpus every future release is scored
+against — so a regression on it fails the build. Two minutes of arguing with us
+here is worth more to this project than a bug report.
+
+If you want to see what the corpus is currently worth, the
+[metrics page](./rehearsal.mdx) has the numbers, and
+[How it works](./algorithm.mdx) explains where they come from.
+
+## Where your labels go
+
+**Nowhere, unless you send them.** Labels are kept in your browser's
+`localStorage` and never transmitted. Nothing on this page phones home.
+
+To contribute them:
+
+1. label a few cases — the disagreements especially;
+2. press **Download .jsonl**;
+3. open a pull request adding the file's lines to `corpus/playground.jsonl`.
+
+Every line is already in the corpus format, so the file drops straight in. A
+maintainer reviews before merging — a corpus is a claim about what a product
+should do, and anonymous strangers do not get to change that claim unreviewed.
+
+## Reading the verdict
+
+| | |
+| --- | --- |
+| **Allow** | published, silently, nobody told anything |
+| **Review** | published **and** queued for a human — the author is told nothing |
+| **Block** | refused; nothing is written and the author is asked to reword |
+
+The **rule** pill says *why* the policy landed where it did:
+`zero-tolerance` (a category that refuses at any score), `block-score` (a
+category over the confidence line), `flagged` (tripped, but only enough to
+queue), `clean`, or `not-screened`.
+
+Switch the surface selector to **Username** and try the same text again. It is
+the same classifier and a different policy — see [Policy](./policy.md).
+
+## The rules panel
+
+Everything in it is a real [`defineModeration`](./configuring.md) field, and the
+config it prints is literally the config being applied — the page builds its
+engine from that object, not from a parallel copy of it. So it is worth using
+the way you would use a spreadsheet: set profanity to **allow**, type the thing
+your users keep getting refused for, and see whether you like the answer.
+
+Two behaviours worth noticing while you play with it:
+
+**A rule reaches every surface.** Set profanity to *allow* and try a username —
+it is allowed there too. An explicit rule is an instruction, and it beats the
+surface's own stricter judgement. If you only meant comments, the config puts
+the rule on the comment surface instead.
+
+**An allowance survives disguise.** Put `ass` in the allow box and try `@ss`,
+`a s s`, `asses`. All allowed, because an allowance is matched with the same
+evasion-resistant matcher as a listed word. An allowance somebody can type
+around is not a setting, it is a trap.

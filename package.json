@@ -1,24 +1,75 @@
 {
   "name": "moderato",
-  "version": "0.1.0",
-  "description": "Content moderation, in tempo. Wrap inputs, image pickers, and video uploads with allow / review / block screening — OpenAI omni-moderation, your own endpoint, or local rules. Server-authoritative by design.",
+  "version": "1.0.0",
+  "description": "Content moderation, in tempo. Wrap any input, image picker, or upload with allow / review / block screening — OpenAI omni-moderation, your own endpoint, or offline rules. Client for speed, server for truth.",
   "license": "MIT",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./react": "./src/react/index.ts",
-    "./web": "./src/web/index.tsx"
-  },
   "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    },
+    "./web": {
+      "types": "./dist/web/index.d.ts",
+      "import": "./dist/web/index.js",
+      "require": "./dist/web/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wiggapony0925/moderato.git"
+  },
+  "homepage": "https://github.com/wiggapony0925/moderato#readme",
+  "bugs": {
+    "url": "https://github.com/wiggapony0925/moderato/issues"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "build": "tsup",
+    "prepare": "npm run build",
+    "verify:package": "node scripts/verify-package.mjs",
+    "rehearse": "node scripts/rehearse.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "check:rehearsal": "node scripts/check-rehearsal.mjs",
+    "docs:start": "npm --prefix docs run start",
+    "docs:build": "npm run build && npm --prefix docs run build",
+    "docs:version": "npm --prefix docs run version",
     "bench": "node bench/run.mjs",
-    "cycle": "node bench/cycle.mjs"
+    "cycle": "node bench/cycle.mjs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run verify:package && npm run rehearse && npm run check:rehearsal && npm run check:docs",
+    "deploy:docs": "gcloud run deploy moderato-docs --source . --region us-central1 --port 8080 --allow-unauthenticated"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -42,12 +93,15 @@
     "moderation",
     "content-moderation",
     "trust-and-safety",
+    "hate-speech",
+    "profanity-filter",
     "openai",
     "omni-moderation",
     "react",
+    "react-hook",
     "image-moderation",
     "video-moderation",
     "nsfw",
-    "profanity"
+    "ugc"
   ]
 }

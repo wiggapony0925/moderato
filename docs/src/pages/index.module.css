@@ -1,0 +1,399 @@
+.main {
+  --measure: 1180px;
+  padding-bottom: 4rem;
+}
+
+.section {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 0;
+}
+
+.sectionTitle {
+  margin: 0 0 0.7rem;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 720;
+  letter-spacing: -0.028em;
+}
+.sectionLede {
+  margin: 0 0 1rem;
+  max-width: 44rem;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────────  banner  ───────────────────────────── */
+
+.banner {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(
+      120% 90% at 12% -10%,
+      color-mix(in oklab, var(--brand) 12%, transparent),
+      transparent 62%
+    ),
+    var(--surface-0);
+}
+
+/* A slow-drifting grid. Very low contrast on purpose: it should be something
+   you notice on the second look, not something competing with the headline. */
+.bannerGrid {
+  position: absolute;
+  inset: -2px;
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.5;
+  mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 72%);
+  animation: drift 26s linear infinite;
+  pointer-events: none;
+}
+@keyframes drift {
+  to {
+    background-position: 46px 46px;
+  }
+}
+
+.bannerInner {
+  position: relative;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 1.5rem clamp(3rem, 6vw, 4.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .bannerInner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.copy {
+  animation: riseIn 0.5s ease-out both;
+}
+.demo {
+  animation: riseIn 0.5s ease-out 0.1s both;
+}
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 560;
+  color: var(--ink-2);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.28rem 0.8rem;
+}
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--viz-good);
+  flex: none;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+.title {
+  margin: 1.1rem 0 0;
+  font-size: clamp(2.2rem, 4vw, 3.15rem);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+  font-weight: 790;
+}
+.titleAccent {
+  color: var(--brand);
+}
+
+.lede {
+  margin: 1.1rem 0 0;
+  max-width: 34rem;
+  font-size: 1.1rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+.lede strong {
+  color: var(--ink-1);
+  font-weight: 640;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.7rem;
+}
+
+.cta,
+.ctaGhost {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.66rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 620;
+  font-size: 0.98rem;
+  text-decoration: none !important;
+  border: 1px solid transparent;
+  transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+}
+.cta {
+  background: var(--brand);
+  color: #fff;
+}
+[data-theme="dark"] .cta {
+  color: #10131a;
+}
+.cta:hover {
+  transform: translateY(-2px);
+  background: var(--brand-ink);
+  color: #fff;
+}
+[data-theme="dark"] .cta:hover {
+  color: #10131a;
+}
+.ctaGhost {
+  background: var(--surface-1);
+  border-color: var(--border-strong);
+  color: var(--ink-1);
+}
+.ctaGhost:hover {
+  transform: translateY(-2px);
+  background: var(--surface-2);
+  color: var(--ink-1);
+}
+
+.install {
+  margin-top: 1.5rem;
+  display: inline-block;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.95rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.88rem;
+  color: var(--ink-1);
+}
+.prompt {
+  color: var(--ink-3);
+  margin-right: 0.4rem;
+  user-select: none;
+}
+
+/* ─────────────────────────────  facts  ───────────────────────────── */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+}
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.factValue {
+  font-size: 1.85rem;
+  font-weight: 720;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+.factLabel {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+/* ─────────────────────────────  places  ───────────────────────────── */
+
+.places {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+}
+
+.place {
+  position: relative;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.3rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.place:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-3px);
+}
+.placeStep {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.3rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.placeTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 690;
+  letter-spacing: -0.018em;
+}
+.placeTag {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.1rem 0.42rem;
+  color: var(--ink-3);
+}
+.placeBody {
+  margin: 0.15rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.58;
+  color: var(--ink-2);
+  flex: 1;
+}
+.placeLink,
+.inlineLink {
+  font-size: 0.9rem;
+  font-weight: 620;
+  font-family: var(--ifm-font-family-monospace);
+  text-decoration: none !important;
+}
+.placeLink {
+  margin-top: 0.5rem;
+}
+.inlineLink {
+  font-family: inherit;
+}
+
+/* ─────────────────────────────  code peek  ───────────────────────────── */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.snippet {
+  margin: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.35rem;
+  font-size: 0.86rem;
+  line-height: 1.62;
+  overflow-x: auto;
+  color: var(--ink-1);
+}
+.snippet code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+/* ─────────────────────────────  evidence  ───────────────────────────── */
+
+.evidence {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .evidence {
+    grid-template-columns: 1fr;
+  }
+}
+.evidenceStats {
+  display: grid;
+  gap: 0.75rem;
+}
+.evidenceStat {
+  display: grid;
+  gap: 0.2rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-sm);
+  padding: 0.95rem 1.15rem;
+}
+.evidenceValue {
+  font-size: 1.75rem;
+  font-weight: 720;
+  line-height: 1;
+  letter-spacing: -0.032em;
+  font-variant-numeric: tabular-nums;
+}
+.evidenceLabel {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────────  finale  ───────────────────────────── */
+
+.finale {
+  max-width: var(--measure);
+  margin: 4rem auto 0;
+  padding: clamp(2.5rem, 5vw, 3.5rem) 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+.finaleTitle {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  font-weight: 740;
+  letter-spacing: -0.032em;
+}
+.finaleLede {
+  margin: 0 auto;
+  max-width: 34rem;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.finale .actions {
+  justify-content: center;
+}

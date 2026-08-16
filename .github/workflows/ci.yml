@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test runner needs node:util's styleText, which lands in 20.12.
+        # That is a constraint on OUR toolchain, not on consumers — the floor
+        # `engines` promises is verified by the `package` job below, which
+        # imports the built tarball on 18 the way an installer would.
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  package:
+    # The check that tests cannot do: the published tarball resolving from
+    # `dist` while the repo develops from `src`. There is no undo on a
+    # published version.
+    #
+    # It runs twice. On 22, because that is where the build works. Then on 18,
+    # because `engines` promises 18 and a promise nothing exercises is a
+    # rumour — this is the job that would catch dist emitting syntax the
+    # floor cannot parse.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run verify:package
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: The published tarball imports on the oldest supported Node
+        run: node --version && npm run verify:package
+
+  rehearsal:
+    # Metrics are regenerated, never hand-written. If a policy change moves
+    # the numbers, the diff shows it in the same pull request as the change —
+    # nobody can update the code and leave a flattering old number on the
+    # docs site.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run rehearse
+      # Compares every metric and ignores `generatedAt`. A wall clock differs
+      # on every run by construction, and a guard that always fails is a
+      # guard somebody turns off.
+      - run: npm run check:rehearsal
+
+  docs:
+    # Two guards in one job. `check:docs` fails on an undocumented export or
+    # a page importing something that no longer exists; the site build fails
+    # if any live example on it does not compile against the real dist.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check:docs
+      - run: npm ci --prefix docs
+      - run: npm --prefix docs run build

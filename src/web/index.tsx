@@ -1,14 +1,6 @@
 /**
- * moderato/web — DOM wrappers.
- *
- * RECONSTRUCTED. The original `src/web` was lost with the machine that held
- * the package's git history; it survives in no ref of loupe-web or
- * loupe-frontend, because `npm run sync:moderato` deliberately strips it
- * (`rm -rf vendor/moderato/src/web`) — the vendored copy exists for Metro,
- * and React Native has no DOM. This file is rebuilt from its call sites in
- * loupe-web and from the conventions the rest of the package sets. The
- * public shape (`ModeratedUpload`, render-prop `open`) is pinned by those
- * call sites; the internals are new.
+ * moderato/web — DOM wrappers. Browser only; `moderato/react` is the
+ * entry point that also works under React Native.
  *
  * The picker is deliberately *not* a screener by default. Per the note in
  * types.ts, a Moderato with no provider allows everything: that is the
