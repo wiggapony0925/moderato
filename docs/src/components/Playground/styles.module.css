@@ -432,21 +432,95 @@
    is a way to lose one off the side of the screen. So on small viewports the
    grid stays a plain stack and the handle is hidden. */
 @media (max-width: 760px) {
+  .board {
+    margin: 1.25rem 0 1.5rem;
+  }
   .grid {
-    padding: 0.6rem;
-    background-image: none;
+    padding: 0.55rem;
+    /* Half-size cells: a 24px grid on a 390px screen is a wall of lines. */
+    background-size: 48px 48px;
   }
-  .panel {
-    transform: none !important;
+  /* Dragging works here — offsets are clamped to the board, so a panel
+     cannot be flung somewhere unreachable. The handle gets a bigger touch
+     target, because a 24px hit area is a 24px hit area. */
+  .grip {
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -0.35rem 0 0 -0.35rem;
   }
-  /* Nothing is draggable in a single column, so the whole affordance goes. */
-  .grip,
-  .snapBack,
-  .boardHint {
+  .boardHint span {
     display: none;
+  }
+  .boardHint {
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+  .panelHead {
+    gap: 0.4rem;
+  }
+  .panelActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .cellText,
   .cellNote {
-    max-width: 8rem;
+    max-width: 7rem;
   }
+  /* Full screen on a phone is the main event, not an escape hatch. */
+  .boardFocused {
+    padding: 0.5rem;
+  }
+  .boardFocused .boardHint {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.35rem 0;
+    background: var(--surface-0);
+  }
+}
+
+/* ── connectors ── */
+
+.wires {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+.wire {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.45;
+  stroke-dasharray: 5 6;
+}
+.wireDot {
+  fill: var(--brand);
+  opacity: 0.8;
+}
+/* The panels sit above the wires; the wires leave from behind them. */
+.panel {
+  z-index: 1;
+}
+
+/* ── full screen ── */
+
+.boardFocused {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--surface-0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.boardFocused .grid {
+  flex: 1;
+  align-content: start;
 }

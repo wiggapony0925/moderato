@@ -90,7 +90,7 @@ wordlistProvider([
 ### Fused tokens, for identity fields
 
 A username has no spaces in it, so whole-token matching finds nothing inside
-`niggercollector`. Turn on the fused scan for those fields:
+`bastardcollector`. Turn on the fused scan for those fields:
 
 ```ts
 wordlistProvider(PROFANITY_PRESET, { scanFused: true });

@@ -44,6 +44,7 @@ import { POLICY_PRESETS } from "moderato";
 | `identity` | usernames, display names, team and list titles | refuses anything that trips at all |
 | `strict` | brand-safe surfaces, under-18 audiences | review from 0.3, refuse from 0.8 |
 | `adult` | dating, 18+ communities, art and fiction | refuses only what is indefensible anywhere |
+| `minor` | where the author is under age | strictest, and personal information becomes zero-tolerance |
 
 `identity` is stricter on purpose. There is no "publish it and review later" for
 a handle: by the time a moderator opens the queue it is on every byline, comment
@@ -96,6 +97,11 @@ more work for people.
 Do not guess. Run the [rehearsal](./rehearsal.mdx) against your own labelled
 cases and look at the curve. There is a slider on that page; drag it and watch
 precision and queue volume move in opposite directions.
+
+`minor` is not just "stricter". The change that matters is that phone numbers,
+emails and locations become refusals rather than queue items — a child
+publishing their address is not something a moderator can usefully catch up on
+next Tuesday. See [Personal data & age](./personal-data.md).
 
 ## Per-surface policy
 

@@ -44,7 +44,7 @@ const PLACES = [
 const FACTS = [
   { value: "0", label: "runtime dependencies" },
   { value: "4", label: "entry points, all typed" },
-  { value: "151", label: "tests" },
+  { value: "175", label: "tests" },
   { value: "60", label: "labelled corpus cases" },
 ];
 

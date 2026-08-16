@@ -68,7 +68,7 @@ interface ScreenInput {
 | --- | --- |
 | `decide` | `(result: ProviderResult, policy?: PolicyConfig) => Verdict` — pure |
 | `canonical` | `(name: string) => string` — normalise a category name |
-| `POLICY_PRESETS` | `balanced` · `identity` · `strict` · `adult` |
+| `POLICY_PRESETS` | `balanced` · `identity` · `strict` · `adult` · `minor` |
 | `DEFAULT_ZERO_TOLERANCE` | the default refuse-outright set (includes `sexual`) |
 | `UNIVERSAL_ZERO_TOLERANCE` | the part that is indefensible on any platform |
 | `DEFAULT_REVIEW_SCORE` | `0.55` |
@@ -98,6 +98,11 @@ interface PolicyConfig {
 | `mockProvider` | `(options?: MockProviderOptions) => ModerationProvider` |
 | `chainProviders` | `(providers, options?) => ModerationProvider` |
 | `mergeResults` | `(results: ProviderResult[]) => ProviderResult` |
+| `piiProvider` | `(options?: PiiOptions) => ModerationProvider` — see [Personal data](./personal-data.md) |
+| `findPii` | `(text: string, options?: PiiOptions) => PiiMatch[]` — with offsets |
+| `redactPii` | `(text: string, options?) => string` — mask rather than refuse |
+| `luhn` | `(value: string) => boolean` — the card checksum, exported on its own |
+| `PII_CATEGORIES` | every detector, for building a picker |
 | `PROFANITY_PRESET` | curated wordlist entries |
 | `PROFANITY_PRESET_STRICT` | the full LDNOOBW corpus + the hate set |
 | `EN_PROFANITY` | the raw corpus array |
@@ -160,7 +165,7 @@ Exported from the entry point that uses them:
 `ScreenOptions` · `ScreenResult` · `NormalizedInput` · `NormalizedToken` ·
 `ImagePart` · `ImageSource` · `VideoConfig` · `FrameEnv` · `CacheConfig` ·
 `FailMode` · `ModerationEvent` · `ModerationSink` · `RefusalOptions` ·
-`WordlistEntry` · `WordlistOptions` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
+`WordlistEntry` · `WordlistOptions` · `PiiCategory` · `PiiMatch` · `PiiOptions` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
 `OpenAIProviderOptions` · `MockProviderOptions` · `ModeratedField` ·
 `UseModeratedFieldOptions` · `FieldCheck` · `ModeratedSubmit` ·
 `ModeratedSubmitOptions` · `MutationLike` · `MutationCallbacks` ·

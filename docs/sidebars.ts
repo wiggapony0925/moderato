@@ -13,7 +13,15 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "Guides",
       collapsed: false,
-      items: ["field-hook", "submit-hook", "uploads", "server", "policy", "providers"],
+      items: [
+        "field-hook",
+        "submit-hook",
+        "uploads",
+        "server",
+        "policy",
+        "providers",
+        "personal-data",
+      ],
     },
     "algorithm",
     {

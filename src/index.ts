@@ -67,6 +67,14 @@ export type { OpenAIProviderOptions } from "./providers/openai.js";
 export { httpProvider } from "./providers/http.js";
 export type { HttpProviderOptions } from "./providers/http.js";
 export { chainProviders, mergeResults } from "./providers/chain.js";
+export {
+  PII_CATEGORIES,
+  findPii,
+  luhn,
+  piiProvider,
+  redactPii,
+} from "./providers/pii.js";
+export type { PiiCategory, PiiMatch, PiiOptions } from "./providers/pii.js";
 export type { ChainOptions } from "./providers/chain.js";
 export { localProvider } from "./providers/local.js";
 export type { LocalRule } from "./providers/local.js";

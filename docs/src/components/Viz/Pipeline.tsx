@@ -21,38 +21,38 @@ const STEPS: Step[] = [
   {
     n: "1",
     title: "What was typed",
-    value: "n1g​gЗr!",
-    note: "A zero-width space between the g's, a digit for the i, a Cyrillic З for the e, and a trailing bang. Four evasions, none of them clever, all of them free.",
+    value: "＄h１т!",
+    note: "A fullwidth dollar sign, a fullwidth digit standing in for an i, a Cyrillic т, and a trailing bang. Four evasions in six characters — none of them clever, all of them free, and any one of them defeats a naive filter.",
   },
   {
     n: "2",
     title: "Fold",
-    value: "niggeri",
-    note: "NFKD decomposition, accents dropped, zero-width characters removed, homoglyphs mapped to their Latin twins, leetspeak resolved. The final “i” is the exclamation mark — “!” maps to “i”, and that is a real problem the next step exists to fix.",
+    value: "shiti",
+    note: "NFKD decomposition handles the fullwidth forms, accents come off, zero-width characters are dropped, the Cyrillic т becomes a Latin t, and the leet map resolves the rest. The final “i” is the exclamation mark — “!” maps to “i” — and that is a real problem the next step exists to fix.",
   },
   {
     n: "3",
     title: "Tokenise",
-    value: '[ "niggeri" ]',
+    value: '[ "shiti" ]',
     note: "Split on anything that is not a letter, then merge runs of single letters, so “f u c k” becomes one token. Word boundaries are kept everywhere else — that is what protects “Scunthorpe”.",
   },
   {
     n: "4",
     title: "Three variants per token",
-    value: 'exact "niggeri" · collapsed "nigeri" · bare "nigger"',
+    value: 'exact "shiti" · collapsed "shiti" · bare "shit"',
     note: "Collapsed folds repeated letters, so “fuuuck” matches. Bare strips characters the leet map invented at the edges, which is how “shit!” survives. Keeping all three costs two strings and misses neither.",
   },
   {
     n: "5",
     title: "Match",
-    value: "bare = nigger  →  hate 0.99",
+    value: "bare = shit  →  profanity 0.72",
     note: "Whole-token, against the list and its common inflections; then multi-word phrases across consecutive tokens; then — on identity fields only — listed words of six letters or more welded inside a longer token.",
   },
   {
     n: "6",
     title: "Decide",
-    value: "0.99 ≥ blockScore → block",
-    note: "The policy is a pure function of the scores. Zero-tolerance categories refuse at any score; everything else refuses above the confidence line and queues below it.",
+    value: "0.55 ≤ 0.72 < 0.92 → review",
+    note: "The policy is a pure function of the scores. Zero-tolerance categories refuse at any score; everything else refuses above the confidence line and queues below it. This one lands in the middle band — published, and put in front of a person.",
   },
 ];
 

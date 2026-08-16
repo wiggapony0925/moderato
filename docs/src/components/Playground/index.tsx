@@ -21,7 +21,7 @@
  * and no vendor key — the free instant layer and nothing else.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   POLICY_PRESETS,
   PROFANITY_PRESET,
@@ -34,6 +34,7 @@ import { useModeratedField } from "moderato/react";
 import { ActionBadge, ACTION_COPY } from "../Viz/ActionBadge";
 import { ScoreBars } from "../Viz/ScoreBars";
 import { clearLayout, useDraggable } from "./useDraggable";
+import { Connectors } from "./Connectors";
 import {
   addCase,
   clearCases,
@@ -75,12 +76,27 @@ const SURFACES: Array<{ id: Surface; label: string; hint: string }> = [
   },
 ];
 
+/**
+ * Sample inputs, chosen to demonstrate a mechanism each.
+ *
+ * None of them is a slur. The fused-token scan is shown with ordinary
+ * profanity ("bastardcollector") because it exercises exactly the same code
+ * path, and a public page should not have a racial slur sitting on a button
+ * for anyone who wanders past. The corpus keeps the real cases — a test
+ * fixture has to contain the real thing — but a UI does not.
+ */
+/** The board is a pipeline; the wires say so even after you rearrange it. */
+const CONNECTIONS = [
+  { from: "composer", to: "verdict" },
+  { from: "verdict", to: "corpus" },
+];
+
 const SAMPLES = [
   "I grew up in Scunthorpe",
   "that guitar solo is sick",
   "this is fucking great",
   "shit!",
-  "niggercollector",
+  "bastardcollector",
   "I hate black people",
 ];
 
@@ -190,13 +206,51 @@ export default function Playground(): JSX.Element {
 
   const agreements = useMemo(() => cases.filter((c) => c.agreed).length, [cases]);
 
+  // Full-bleed mode. The board is the page then — no sidebar, no table of
+  // contents, no article column squeezing three panels into a third of the
+  // window. Escape closes it, because anything that takes over the screen
+  // has to give it back the way people expect.
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFocused(false);
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [focused]);
+
+  // Wires are remeasured every frame while a pointer is down anywhere on the
+  // board, and left alone the rest of the time.
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const [wiring, setWiring] = useState(false);
+  useEffect(() => {
+    const stop = () => setWiring(false);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+  }, []);
+
   return (
-    <div className={styles.board}>
+    <div className={focused ? styles.boardFocused : styles.board}>
       <div className={styles.boardHint}>
         <span>
-          Drag any panel by its handle to rearrange the board. Positions are
-          remembered.
+          Drag a panel by the handle in its corner. Positions snap to the grid
+          and are remembered.
         </span>
+        <button
+          type="button"
+          className={styles.ghost}
+          onClick={() => setFocused((f) => !f)}
+          aria-pressed={focused}
+        >
+          {focused ? "Exit full screen (Esc)" : "Full screen"}
+        </button>
         <button
           type="button"
           className={styles.ghost}
@@ -209,7 +263,16 @@ export default function Playground(): JSX.Element {
         </button>
       </div>
 
-      <div className={styles.grid}>
+      <div
+        className={styles.grid}
+        ref={boardRef}
+        onPointerDown={() => setWiring(true)}
+      >
+        <Connectors
+          boardRef={boardRef}
+          active={wiring}
+          links={CONNECTIONS}
+        />
         <Panel
           id="composer"
           title="Try something"

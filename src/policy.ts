@@ -147,6 +147,47 @@ export const POLICY_PRESETS = {
     blockScore: DEFAULT_BLOCK_SCORE,
     zeroTolerance: [...UNIVERSAL_LIST],
   } satisfies PolicyConfig,
+
+  /**
+   * **Where the author is a minor.**
+   *
+   * Two things change, and the second matters more than the first.
+   *
+   * The obvious one: the bar for everything moves down. `strict`-level
+   * thresholds, and profanity and harassment become refusals rather than
+   * queue items.
+   *
+   * The one people forget: **personal information becomes zero-tolerance.**
+   * A twenty-two-year-old posting their phone number to arrange a collection
+   * is doing something ordinary. A thirteen-year-old doing it is the exact
+   * situation child-safety law exists about, and a queue a moderator reaches
+   * on Tuesday is not a control. It refuses, at any score, every time.
+   *
+   * moderato cannot know anyone's age — that is your account system. This
+   * preset is what you apply once you know. And it is a floor, not
+   * compliance: COPPA, the UK Age Appropriate Design Code and their
+   * equivalents have obligations no library can discharge for you.
+   */
+  minor: {
+    reviewScore: 0.25,
+    blockScore: 0.6,
+    zeroTolerance: [
+      ...DEFAULT_LIST,
+      "hate",
+      "harassment",
+      "profanity",
+      "self-harm",
+      "self-harm/intent",
+      "violence",
+      "illicit",
+      // Contact details from a child are not a moderation question.
+      "pii/phone",
+      "pii/email",
+      "pii/location",
+      "pii/ssn",
+      "pii/card",
+    ],
+  } satisfies PolicyConfig,
 } as const;
 
 /** Apply the policy to one classifier result. Pure — no IO, no state. */

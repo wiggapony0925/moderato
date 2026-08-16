@@ -59,6 +59,7 @@ export interface Draggable {
   panelProps: {
     ref: (node: HTMLElement | null) => void;
     style: React.CSSProperties;
+    "data-panel": string;
     "data-dragging": boolean | undefined;
   };
   /** Spread onto the grab handle inside it. */
@@ -72,6 +73,28 @@ export interface Draggable {
   dragging: boolean;
   moved: boolean;
   reset: () => void;
+}
+
+/** Keep a panel inside its board. Without this, one enthusiastic drag on a
+ *  narrow screen puts a panel somewhere you cannot reach it — which is why
+ *  dragging used to be disabled on phones instead of fixed. */
+function clamp(node: HTMLElement | null, next: Point, start: Point): Point {
+  const board = node?.parentElement;
+  if (!node || !board) return next;
+  const panel = node.getBoundingClientRect();
+  const bounds = board.getBoundingClientRect();
+  // The rect already includes the current transform, so back it out to find
+  // where the panel sits with no offset at all.
+  const restLeft = panel.left - start.x;
+  const restTop = panel.top - start.y;
+  const minX = bounds.left - restLeft;
+  const maxX = bounds.right - panel.width - restLeft;
+  const minY = bounds.top - restTop;
+  const maxY = bounds.bottom - panel.height - restTop;
+  return {
+    x: Math.min(Math.max(next.x, Math.min(minX, 0)), Math.max(maxX, 0)),
+    y: Math.min(Math.max(next.y, Math.min(minY, 0)), Math.max(maxY, 0)),
+  };
 }
 
 export function useDraggable(id: string, label: string): Draggable {
@@ -121,10 +144,11 @@ export function useDraggable(id: string, label: string): Draggable {
     const move = (event: PointerEvent) => {
       const from = origin.current;
       if (!from) return;
-      setOffset({
+      const raw = {
         x: snap(from.start.x + event.clientX - from.pointer.x),
         y: snap(from.start.y + event.clientY - from.pointer.y),
-      });
+      };
+      setOffset((current) => clamp(node.current, raw, current));
     };
     const end = () => {
       setDragging(false);
@@ -187,6 +211,7 @@ export function useDraggable(id: string, label: string): Draggable {
       ref: (n) => {
         node.current = n;
       },
+      "data-panel": id,
       style: {
         transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
         // No transition while dragging, or the card lags the pointer.
