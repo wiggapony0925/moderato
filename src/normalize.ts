@@ -12,7 +12,9 @@
  *   ("f u c k" → "fuck") — real words are never one letter long in runs;
  * - offer a letter-run-collapsed variant per token ("fuuuck" → "fuck")
  *   so stretched spellings match without turning "class" into "clas"
- *   for matching purposes (both variants are kept).
+ *   for matching purposes (both variants are kept);
+ * - offer a variant with leet-derived edges stripped, so "shit!" — which
+ *   de-leets to "shiti", because "!" maps to "i" — still matches "shit".
  */
 
 const LEET: Record<string, string> = {
@@ -39,24 +41,88 @@ export interface NormalizedToken {
   exact: string;
   /** Letter runs collapsed to one ("fuuuck" → "fuck"). */
   collapsed: string;
+  /**
+   * `exact` with leading and trailing leet-derived characters removed.
+   *
+   * The de-leeting that turns "n1gger" into "nigger" also turns "shit!"
+   * into "shiti", because "!" maps to "i" — and "shiti" matches no word in
+   * any list, so a single exclamation mark used to defeat the whole
+   * filter. Mapping only interior characters would break "@ss" instead.
+   * Keeping both forms costs one string per token and misses neither.
+   */
+  bare: string;
+}
+
+/** One character of folded text: what it became, and whether we invented it. */
+interface Char {
+  /** A letter, or " " for everything that is not one. */
+  value: string;
+  /** True when the leet map produced this letter from a non-letter. */
+  substituted: boolean;
 }
 
 /** Lowercase, de-accent, de-leet one string; non-letters become spaces. */
-function letters(text: string): string {
-  const folded = text
+function fold(text: string): Char[] {
+  const normalized = text
     .normalize("NFKD")
     .replace(/\p{M}/gu, "")
     .replace(ZERO_WIDTH, "")
     .toLowerCase();
-  let out = "";
-  for (const ch of folded) {
+  const out: Char[] = [];
+  for (const ch of normalized) {
     const mapped = LEET[ch] ?? ch;
-    out += /\p{L}/u.test(mapped) ? mapped : " ";
+    const isLetter = /\p{L}/u.test(mapped);
+    out.push({
+      value: isLetter ? mapped : " ",
+      substituted: isLetter && mapped !== ch,
+    });
   }
   return out;
 }
 
 const collapseRuns = (token: string): string => token.replace(/(\p{L})\1+/gu, "$1");
+
+interface RawToken {
+  word: string;
+  /** Parallel to `word`'s characters. */
+  substituted: boolean[];
+}
+
+/** Split folded characters into words, keeping the substitution flags. */
+function split(chars: Char[]): RawToken[] {
+  const tokens: RawToken[] = [];
+  let word = "";
+  let substituted: boolean[] = [];
+  const flush = () => {
+    if (word) tokens.push({ word, substituted });
+    word = "";
+    substituted = [];
+  };
+  for (const ch of chars) {
+    if (ch.value === " ") {
+      flush();
+      continue;
+    }
+    word += ch.value;
+    substituted.push(ch.substituted);
+  }
+  flush();
+  return tokens;
+}
+
+/** Strip leet-derived characters from both ends. */
+function bareOf({ word, substituted }: RawToken): string {
+  let start = 0;
+  let end = word.length;
+  while (start < end && substituted[start]) start++;
+  while (end > start && substituted[end - 1]) end--;
+  return word.slice(start, end);
+}
+
+const merge = (tokens: RawToken[]): RawToken => ({
+  word: tokens.map((t) => t.word).join(""),
+  substituted: tokens.flatMap((t) => t.substituted),
+});
 
 /**
  * Tokenise text for word matching. Runs of single-letter tokens are merged
@@ -64,16 +130,16 @@ const collapseRuns = (token: string): string => token.replace(/(\p{L})\1+/gu, "$
  * keeps its own word boundary — which is what protects "Scunthorpe".
  */
 export function normalizeTokens(text: string): NormalizedToken[] {
-  const raw = letters(text).split(/\s+/).filter(Boolean);
-  const merged: string[] = [];
-  let singles: string[] = [];
+  const raw = split(fold(text));
+  const merged: RawToken[] = [];
+  let singles: RawToken[] = [];
   const flush = () => {
-    if (singles.length >= 2) merged.push(singles.join(""));
+    if (singles.length >= 2) merged.push(merge(singles));
     else merged.push(...singles);
     singles = [];
   };
   for (const token of raw) {
-    if (token.length === 1) {
+    if (token.word.length === 1) {
       singles.push(token);
     } else {
       flush();
@@ -81,5 +147,9 @@ export function normalizeTokens(text: string): NormalizedToken[] {
     }
   }
   flush();
-  return merged.map((token) => ({ exact: token, collapsed: collapseRuns(token) }));
+  return merged.map((token) => ({
+    exact: token.word,
+    collapsed: collapseRuns(token.word),
+    bare: bareOf(token),
+  }));
 }

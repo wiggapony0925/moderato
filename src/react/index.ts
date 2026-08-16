@@ -17,6 +17,17 @@ export type {
 export { useModeration } from "./useModeration.js";
 export type { UseModeration } from "./useModeration.js";
 
+export {
+  DEFAULT_DEBOUNCE_MS,
+  DEFAULT_MIN_LENGTH,
+  useModeratedField,
+} from "./useModeratedField.js";
+export type {
+  FieldCheck,
+  ModeratedField,
+  UseModeratedFieldOptions,
+} from "./useModeratedField.js";
+
 // The server-refusal contract, re-exported so a client that only ever
 // needs `refusalFrom` can import everything from one place.
 export {

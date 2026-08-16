@@ -4,14 +4,28 @@
  * Screening is advisory except where it isn't:
  *
  * - a hit in the zero-tolerance set **blocks** — refuse the write;
+ * - a category scoring at or above `blockScore` **blocks** too. This is
+ *   the automation dial. A classifier at 0.97 on "hate" is not a judgement
+ *   call, and making a human confirm it is how a queue fills with work
+ *   that only ever has one answer;
  * - anything else the classifier flags (or scores above the review
  *   threshold) **reviews** — publish, but put it in front of a human.
  *   Community vocabulary is full of "sick", "insane", "killer" and
  *   "steal"; auto-deleting on a classifier's say-so deletes real posts;
  * - everything else **allows**, silently.
+ *
+ * Nothing here does IO or holds state, so it is the same decision on the
+ * server and in the browser — which is the point. One policy object,
+ * shipped to both, is how the client's preflight and the server's refusal
+ * stay in agreement.
  */
 
-import type { PolicyConfig, ProviderResult, Verdict } from "./types.js";
+import type {
+  CategoryThresholds,
+  PolicyConfig,
+  ProviderResult,
+  Verdict,
+} from "./types.js";
 import { ALLOW, BLOCK, REVIEW } from "./types.js";
 
 /**
@@ -33,52 +47,149 @@ export const DEFAULT_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
 export const DEFAULT_REVIEW_SCORE = 0.55;
 
 /**
+ * Score at or above which ANY category refuses outright.
+ *
+ * This is the line between "a machine noticed something" and "a machine is
+ * certain". A classifier returning 0.95 on hate is not making a judgement
+ * call, and routing that to a human queue means the slur is live until
+ * someone gets to it — which on a small team is hours, and on a weekend is
+ * days. Everything below the line still publishes and queues, because that
+ * is where the false positives live.
+ *
+ * Set `blockScore: Infinity` to go back to "only zeroTolerance blocks".
+ */
+export const DEFAULT_BLOCK_SCORE = 0.92;
+
+/**
  * Canonicalise a category name. Providers spell attributes with "_"
  * ("sexual_minors"); policies are written the way the docs spell them
  * ("sexual/minors").
  */
 export const canonical = (name: string): string => name.replaceAll("_", "/");
 
+/**
+ * Ready-made policies. Pick one by what the field IS, not by how strict you
+ * feel — the right answer differs per surface, and these are the three
+ * shapes that actually recur.
+ */
+export const POLICY_PRESETS = {
+  /**
+   * Feeds, comments, captions. Refuses the indefensible, queues the
+   * doubtful, lets the community talk like a community.
+   */
+  balanced: {
+    reviewScore: DEFAULT_REVIEW_SCORE,
+    blockScore: DEFAULT_BLOCK_SCORE,
+  } satisfies PolicyConfig,
+
+  /**
+   * **Identity fields** — usernames, display names, collection and list
+   * names, anything that is permanent, public, and appears next to other
+   * people's content. There is no "publish it and review later" for a
+   * handle: it is on every row the account touches until someone gets to
+   * the queue. So anything that trips at all is refused, and the author is
+   * asked for a different name. Nobody is owed their first choice of
+   * username.
+   */
+  identity: {
+    reviewScore: 0.4,
+    blockScore: 0.4,
+    zeroTolerance: [...DEFAULT_ZERO_TOLERANCE, "hate", "harassment", "profanity"],
+  } satisfies PolicyConfig,
+
+  /**
+   * Brand-safe surfaces — anything a sponsor or an app store reviewer sees.
+   * Queues far more than `balanced`; expect to staff it.
+   */
+  strict: {
+    reviewScore: 0.3,
+    blockScore: 0.8,
+    zeroTolerance: [...DEFAULT_ZERO_TOLERANCE, "hate", "harassment"],
+  } satisfies PolicyConfig,
+} as const;
+
 /** Apply the policy to one classifier result. Pure — no IO, no state. */
 export function decide(result: ProviderResult, policy: PolicyConfig = {}): Verdict {
-  const zeroTolerance = new Set(policy.zeroTolerance ?? DEFAULT_ZERO_TOLERANCE);
+  const zeroTolerance = new Set(
+    [...(policy.zeroTolerance ?? DEFAULT_ZERO_TOLERANCE)].map(canonical),
+  );
   const reviewScore = policy.reviewScore ?? DEFAULT_REVIEW_SCORE;
+  const blockScore = policy.blockScore ?? DEFAULT_BLOCK_SCORE;
 
-  const scoreOf = (name: string): number => {
-    for (const [key, value] of Object.entries(result.scores)) {
-      if (canonical(key) === canonical(name)) return value;
-    }
-    return 0;
-  };
+  // One canonicalised score map, built once. The old shape re-scanned every
+  // entry for every lookup, which is O(categories²) on a provider that
+  // reports thirteen of them per call.
+  const scores = new Map<string, number>();
+  for (const [name, score] of Object.entries(result.scores)) {
+    const key = canonical(name);
+    scores.set(key, Math.max(scores.get(key) ?? 0, score));
+  }
+  const scoreOf = (name: string): number => scores.get(canonical(name)) ?? 0;
+
+  const overrides = (name: string): CategoryThresholds =>
+    policy.categories?.[canonical(name)] ?? {};
+  const reviewAt = (name: string): number => overrides(name).review ?? reviewScore;
+  const blockAt = (name: string): number | undefined =>
+    overrides(name).block ?? blockScore;
 
   const names = new Set<string>();
   for (const [name, hit] of Object.entries(result.flags)) {
     if (hit) names.add(canonical(name));
   }
-  for (const [name, score] of Object.entries(result.scores)) {
-    if (score >= reviewScore) names.add(canonical(name));
+  for (const [name, score] of scores) {
+    if (score >= reviewAt(name)) names.add(name);
   }
 
   const tripped = [...names].sort((a, b) => scoreOf(b) - scoreOf(a));
-  const worst = Math.max(0, ...Object.values(result.scores));
+  const worst = Math.max(0, ...scores.values());
 
-  if (tripped.some((name) => zeroTolerance.has(name))) {
+  const zeroHit = tripped.find((name) => zeroTolerance.has(name));
+  if (zeroHit !== undefined) {
     return {
       action: BLOCK,
       categories: tripped,
       score: worst,
+      rule: "zero-tolerance",
+      primary: zeroHit,
+      screened: true,
       detail: `Blocked: ${tripped.join(", ")}`,
     };
   }
+
+  const overBlock = tripped.find((name) => {
+    const threshold = blockAt(name);
+    return threshold !== undefined && scoreOf(name) >= threshold;
+  });
+  if (overBlock !== undefined) {
+    return {
+      action: BLOCK,
+      categories: tripped,
+      score: worst,
+      rule: "block-score",
+      primary: overBlock,
+      screened: true,
+      detail: `Blocked: ${overBlock} at ${scoreOf(overBlock).toFixed(2)}`,
+    };
+  }
+
   if (tripped.length > 0) {
     return {
       action: REVIEW,
       categories: tripped,
       score: worst,
+      rule: "flagged",
+      primary: tripped[0],
+      screened: true,
       detail: `Flagged: ${tripped.join(", ")}`,
     };
   }
-  return { action: ALLOW, categories: [], score: worst };
+  return {
+    action: ALLOW,
+    categories: [],
+    score: worst,
+    rule: "clean",
+    screened: true,
+  };
 }
 
 /**

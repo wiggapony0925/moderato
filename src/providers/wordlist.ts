@@ -42,7 +42,12 @@ const matchesWord = (token: string, word: string): boolean => {
 };
 
 const tokenMatches = (token: NormalizedToken, word: string): boolean =>
-  matchesWord(token.exact, word) || matchesWord(token.collapsed, word);
+  matchesWord(token.exact, word) ||
+  matchesWord(token.collapsed, word) ||
+  matchesWord(token.bare, word) ||
+  matchesWord(collapseRuns(token.bare), word);
+
+const collapseRuns = (token: string): string => token.replace(/(\p{L})\1+/gu, "$1");
 
 /** A phrase matches when its words line up on consecutive tokens. */
 const phraseMatches = (tokens: NormalizedToken[], words: string[]): boolean => {
@@ -81,7 +86,9 @@ export function wordlistProvider(entries: WordlistEntry[]): ModerationProvider {
         const hit =
           tokens.some(
             (token) =>
-              entry.singles.has(token.exact) || entry.singles.has(token.collapsed),
+              entry.singles.has(token.exact) ||
+              entry.singles.has(token.collapsed) ||
+              entry.singles.has(token.bare),
           ) ||
           tokens.some((token) =>
             entry.singlesList.some((word) => tokenMatches(token, word)),

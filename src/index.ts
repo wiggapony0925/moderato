@@ -15,28 +15,44 @@ export {
 } from "./types.js";
 export type {
   Action,
+  CacheConfig,
+  CategoryThresholds,
   FailMode,
   ImagePart,
   ImageSource,
+  ModerationEvent,
   ModerationProvider,
+  ModerationSink,
   ModeratoConfig,
   NormalizedInput,
   PolicyConfig,
   ProviderResult,
   ScreenInput,
   Verdict,
+  VerdictRule,
   VideoConfig,
 } from "./types.js";
 
 export {
+  DEFAULT_BLOCK_SCORE,
   DEFAULT_REFUSAL_MESSAGE,
   DEFAULT_REVIEW_SCORE,
   DEFAULT_ZERO_TOLERANCE,
+  POLICY_PRESETS,
   canonical,
   decide,
 } from "./policy.js";
 
-export { DEFAULT_TIMEOUT_MS, Moderato, createModerato } from "./engine.js";
+export {
+  DEFAULT_CACHE_ENTRIES,
+  DEFAULT_CACHE_TTL_MS,
+  DEFAULT_TIMEOUT_MS,
+  Moderato,
+  createModerato,
+} from "./engine.js";
+export type { ScreenOptions, ScreenResult } from "./engine.js";
+
+export { TtlCache } from "./cache.js";
 
 export {
   DEFAULT_REFUSAL_FALLBACK,
@@ -49,6 +65,8 @@ export { OPENAI_MODERATION_MODEL, openAIProvider } from "./providers/openai.js";
 export type { OpenAIProviderOptions } from "./providers/openai.js";
 export { httpProvider } from "./providers/http.js";
 export type { HttpProviderOptions } from "./providers/http.js";
+export { chainProviders, mergeResults } from "./providers/chain.js";
+export type { ChainOptions } from "./providers/chain.js";
 export { localProvider } from "./providers/local.js";
 export type { LocalRule } from "./providers/local.js";
 export {
