@@ -181,3 +181,38 @@ describe("POLICY_PRESETS.identity", () => {
     expect(decide(result({ hate: 0.01 }), policy).action).toBe(ALLOW);
   });
 });
+
+describe("survives a consumer's loose transpiler", () => {
+  /**
+   * Regression. `[...someSet]` is correct ES2015 and a bundler in loose mode
+   * rewrites it to `[].concat(someSet)`, which appends the Set as a single
+   * element instead of spreading it. Every category comparison then compares
+   * against a Set object, `canonical` is handed a non-string, and screening
+   * fails closed to "review" with a cryptic message — which is exactly how it
+   * showed up: a docs page reporting "u.replaceAll is not a function".
+   *
+   * The library must therefore never depend on spread over a non-array, and
+   * `decide` must accept any iterable for `zeroTolerance`.
+   */
+  it("accepts a Set, an Array, and any other iterable for zeroTolerance", () => {
+    const flagged = result({ hate: 0.6 }, { hate: true });
+    const asSet = decide(flagged, { zeroTolerance: new Set(["hate"]) });
+    const asArray = decide(flagged, { zeroTolerance: ["hate"] });
+    const asGenerator = decide(flagged, {
+      zeroTolerance: (function* () {
+        yield "hate";
+      })(),
+    });
+    expect(asSet.action).toBe(BLOCK);
+    expect(asArray.action).toBe(BLOCK);
+    expect(asGenerator.action).toBe(BLOCK);
+  });
+
+  it("ships zero-tolerance sets that contain only strings", () => {
+    for (const name of DEFAULT_ZERO_TOLERANCE) expect(typeof name).toBe("string");
+    for (const name of UNIVERSAL_ZERO_TOLERANCE) expect(typeof name).toBe("string");
+    for (const preset of Object.values(POLICY_PRESETS)) {
+      for (const name of preset.zeroTolerance ?? []) expect(typeof name).toBe("string");
+    }
+  });
+});

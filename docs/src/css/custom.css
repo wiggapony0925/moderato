@@ -1,0 +1,119 @@
+/**
+ * Site theme + the visualization palette.
+ *
+ * The chart colours are the validated default palette from the data-viz
+ * method: categorical slots 1 and 2 for the two swept series, and the fixed
+ * status palette for allow / review / block. Both modes are *selected* —
+ * the dark column is the same hues re-stepped for the dark surface, not an
+ * automatic flip. Re-run the validator if you change any of them.
+ */
+
+:root {
+  --ifm-color-primary: #1c5cab;
+  --ifm-color-primary-dark: #19529a;
+  --ifm-color-primary-darker: #184f91;
+  --ifm-color-primary-darkest: #144178;
+  --ifm-color-primary-light: #1f66bc;
+  --ifm-color-primary-lighter: #2069c5;
+  --ifm-color-primary-lightest: #2476dc;
+  --ifm-code-font-size: 92%;
+  --ifm-font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+
+  /* ── viz roles ── */
+  --viz-surface: #fcfcfb;
+  --viz-surface-sunk: #f2f2f0;
+  --viz-border: #dedcd6;
+  --viz-text: #0b0b0b;
+  --viz-text-secondary: #52514e;
+  --viz-text-muted: #75746e;
+  --viz-grid: #e6e5e0;
+
+  --viz-series-1: #2a78d6; /* precision */
+  --viz-series-2: #eb6834; /* recall    */
+
+  --viz-good: #0ca30c; /* allow  */
+  --viz-warning: #fab219; /* review */
+  --viz-critical: #d03b3b; /* block  */
+
+  --viz-seq-100: #cde2fb;
+  --viz-seq-250: #86b6ef;
+  --viz-seq-450: #2a78d6;
+  --viz-seq-600: #184f95;
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #86b6ef;
+  --ifm-color-primary-dark: #6da7ec;
+  --ifm-color-primary-darker: #5598e7;
+  --ifm-color-primary-darkest: #3987e5;
+  --ifm-color-primary-light: #9ec5f4;
+  --ifm-color-primary-lighter: #b7d3f6;
+  --ifm-color-primary-lightest: #cde2fb;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.12);
+
+  --viz-surface: #1a1a19;
+  --viz-surface-sunk: #232322;
+  --viz-border: #3b3a37;
+  --viz-text: #ffffff;
+  --viz-text-secondary: #c3c2b7;
+  --viz-text-muted: #96958c;
+  --viz-grid: #302f2c;
+
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+
+  /* Status steps are fixed across modes by design — they all clear 3:1 on
+     the dark surface, and a status colour that moved would stop being a
+     status colour. */
+  --viz-good: #0ca30c;
+  --viz-warning: #fab219;
+  --viz-critical: #d03b3b;
+
+  --viz-seq-100: #184f95;
+  --viz-seq-250: #256abf;
+  --viz-seq-450: #3987e5;
+  --viz-seq-600: #9ec5f4;
+}
+
+/* The OS setting, for anything rendered before Docusaurus stamps the html
+   element. `:where()` keeps this below the explicit toggle above. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --viz-surface: #1a1a19;
+    --viz-surface-sunk: #232322;
+    --viz-border: #3b3a37;
+    --viz-text: #ffffff;
+    --viz-text-secondary: #c3c2b7;
+    --viz-text-muted: #96958c;
+    --viz-grid: #302f2c;
+    --viz-series-1: #3987e5;
+    --viz-series-2: #d95926;
+  }
+}
+
+/* ── shared surfaces ── */
+
+.mdCard {
+  background: var(--viz-surface);
+  border: 1px solid var(--viz-border);
+  border-radius: 10px;
+  padding: 1.15rem 1.25rem;
+}
+
+.mdMuted {
+  color: var(--viz-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* Wide content scrolls inside its own box; the page body never does. */
+.mdScroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+table th,
+table td {
+  font-variant-numeric: tabular-nums;
+}

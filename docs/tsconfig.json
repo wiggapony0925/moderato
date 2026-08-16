@@ -1,0 +1,15 @@
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "paths": {
+      "moderato": ["../src/index.ts"],
+      "moderato/react": ["../src/react/index.ts"],
+      "moderato/web": ["../src/web/index.tsx"],
+      "moderato/server": ["../src/server/index.ts"],
+      "@site/*": ["./*"]
+    }
+  },
+  "exclude": [".docusaurus", "build"]
+}

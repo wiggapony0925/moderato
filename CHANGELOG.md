@@ -4,7 +4,44 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] — unreleased
+## [1.0.0]
+
+**The first stable release.** From here the public API is a promise: see
+[Versioning](https://wiggapony0925.github.io/moderato/upgrading) for what earns
+a major, including the unusual rule that *a default which changes what gets
+published or refused* is a breaking change even though it breaks no build.
+
+### Added in 1.0.0
+
+- **A documentation site** (`docs/`, Docusaurus) with versioned docs, a live
+  **playground** and a live **metrics page**. It imports the real built
+  package, so an example that stops compiling fails the build.
+- **Rehearsals** — `npm run rehearse` scores the library against a labelled
+  corpus (`corpus/*.jsonl`), sweeping the block threshold over one fixed
+  classifier pass, and writes the report the metrics page renders. CI fails if
+  the committed report does not match a fresh run, so the published numbers
+  can never describe a version that no longer exists.
+- **A corpus**, 52 hand-written cases covering evasion, the Scunthorpe class of
+  false positive, threats, spam, identity fields, non-English text and empty
+  input. The playground contributes more: every "no, that's wrong" is a
+  labelled case, exportable as JSONL.
+- **`npm run check:docs`** — the anti-drift guard. Fails on a public export no
+  page mentions, and on a page importing a name that no longer exists.
+
+### Fixed in 1.0.0
+
+- **A consumer's loose transpiler could silently disable category matching.**
+  `[...someSet]` is correct ES2015; a bundler transpiling spread in loose mode
+  rewrites it to `[].concat(someSet)`, which appends the Set as ONE element
+  instead of spreading it. Every category comparison then ran against a Set
+  object, and screening failed closed to `review` with an opaque message. The
+  library no longer spreads any non-array iterable — `Array.from` and
+  `Map#forEach` survive every babel configuration. Found by looking at the
+  rendered docs page, not by any test: the failure needs a bundler to appear.
+
+---
+
+## [0.2.0]
 
 The release that makes moderato installable by somebody who isn't us: a way to
 wrap ordinary input fields, the server half that can actually refuse a write,

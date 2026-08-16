@@ -284,7 +284,9 @@ const normalizedFallback = (input: ScreenInput): NormalizedInput => ({
 /** Policy identity for cache keys — order-independent, cheap. */
 function stablePolicyKey(policy: PolicyConfig | undefined): string {
   if (!policy) return "";
-  const zero = policy.zeroTolerance ? [...policy.zeroTolerance].sort().join(",") : "";
+  const zero = policy.zeroTolerance
+    ? Array.from(policy.zeroTolerance).sort().join(",")
+    : "";
   const categories = policy.categories
     ? Object.entries(policy.categories)
         .sort(([a], [b]) => (a < b ? -1 : 1))

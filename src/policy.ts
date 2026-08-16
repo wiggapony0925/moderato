@@ -33,14 +33,16 @@ import { ALLOW, BLOCK, REVIEW } from "./types.js";
  * product decision — there is no service, anywhere, whose users are better
  * served by publishing this and reviewing it next Tuesday.
  */
-export const UNIVERSAL_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
+const UNIVERSAL_LIST = [
   "sexual/minors",
   "hate/threatening",
   "harassment/threatening",
   "violence/graphic",
   "self-harm/instructions",
   "illicit/violent",
-]);
+] as const;
+
+export const UNIVERSAL_ZERO_TOLERANCE: ReadonlySet<string> = new Set(UNIVERSAL_LIST);
 
 /**
  * The default refuse-outright set: the universal list, plus `sexual`.
@@ -57,10 +59,9 @@ export const UNIVERSAL_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
  * field is that this library does not get to decide what your service is
  * for.
  */
-export const DEFAULT_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
-  ...UNIVERSAL_ZERO_TOLERANCE,
-  "sexual",
-]);
+const DEFAULT_LIST = [...UNIVERSAL_LIST, "sexual"];
+
+export const DEFAULT_ZERO_TOLERANCE: ReadonlySet<string> = new Set(DEFAULT_LIST);
 
 /** Score above which a category counts even when the provider didn't flag it. */
 export const DEFAULT_REVIEW_SCORE = 0.55;
@@ -118,7 +119,7 @@ export const POLICY_PRESETS = {
   identity: {
     reviewScore: 0.4,
     blockScore: 0.4,
-    zeroTolerance: [...DEFAULT_ZERO_TOLERANCE, "hate", "harassment", "profanity"],
+    zeroTolerance: [...DEFAULT_LIST, "hate", "harassment", "profanity"],
   } satisfies PolicyConfig,
 
   /**
@@ -128,7 +129,7 @@ export const POLICY_PRESETS = {
   strict: {
     reviewScore: 0.3,
     blockScore: 0.8,
-    zeroTolerance: [...DEFAULT_ZERO_TOLERANCE, "hate", "harassment"],
+    zeroTolerance: [...DEFAULT_LIST, "hate", "harassment"],
   } satisfies PolicyConfig,
 
   /**
@@ -144,14 +145,20 @@ export const POLICY_PRESETS = {
   adult: {
     reviewScore: 0.6,
     blockScore: DEFAULT_BLOCK_SCORE,
-    zeroTolerance: [...UNIVERSAL_ZERO_TOLERANCE],
+    zeroTolerance: [...UNIVERSAL_LIST],
   } satisfies PolicyConfig,
 } as const;
 
 /** Apply the policy to one classifier result. Pure — no IO, no state. */
 export function decide(result: ProviderResult, policy: PolicyConfig = {}): Verdict {
+  // `Array.from`, not `[...x]`. Spreading a non-array iterable is correct
+  // ES2015, but a consumer whose bundler transpiles spread in loose mode
+  // rewrites it to `[].concat(x)` — which appends the Set as ONE element
+  // instead of spreading it, and every category comparison then silently
+  // fails. A published library does not get to assume its consumers'
+  // babel config; `Array.from` is a function call and survives all of them.
   const zeroTolerance = new Set(
-    [...(policy.zeroTolerance ?? DEFAULT_ZERO_TOLERANCE)].map(canonical),
+    Array.from(policy.zeroTolerance ?? DEFAULT_ZERO_TOLERANCE, canonical),
   );
   const reviewScore = policy.reviewScore ?? DEFAULT_REVIEW_SCORE;
   const blockScore = policy.blockScore ?? DEFAULT_BLOCK_SCORE;
@@ -176,12 +183,14 @@ export function decide(result: ProviderResult, policy: PolicyConfig = {}): Verdi
   for (const [name, hit] of Object.entries(result.flags)) {
     if (hit) names.add(canonical(name));
   }
-  for (const [name, score] of scores) {
+  // `forEach`, not `for…of`: babel's loose mode compiles for-of as an index
+  // loop, which is wrong for a Map. Same reasoning as `Array.from` above.
+  scores.forEach((score, name) => {
     if (score >= reviewAt(name)) names.add(name);
-  }
+  });
 
-  const tripped = [...names].sort((a, b) => scoreOf(b) - scoreOf(a));
-  const worst = Math.max(0, ...scores.values());
+  const tripped = Array.from(names).sort((a, b) => scoreOf(b) - scoreOf(a));
+  const worst = Math.max(0, ...Array.from(scores.values()));
 
   const zeroHit = tripped.find((name) => zeroTolerance.has(name));
   if (zeroHit !== undefined) {

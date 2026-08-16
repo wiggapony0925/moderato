@@ -9,6 +9,11 @@ Client for speed, server for truth.
 npm install moderato
 ```
 
+**📖 [Full documentation](https://wiggapony0925.github.io/moderato)** —
+guides, API reference, a [playground](https://wiggapony0925.github.io/moderato/playground)
+you can type anything into, and [live metrics](https://wiggapony0925.github.io/moderato/rehearsal)
+measuring how well it actually does against a labelled corpus.
+
 ---
 
 Anywhere one person types something another person reads: a comment box, a
@@ -467,15 +472,41 @@ Node ≥ 18 (needs `fetch`/`Request`). React ≥ 18 is an *optional* peer — th
 and server entry points do not import it. ESM and CJS builds, types for every
 entry point, no runtime dependencies.
 
+## Rehearsals
+
+A version number tells you nothing about whether a moderation library still
+catches slurs. So every release is scored against a labelled corpus:
+
+```bash
+npm run build && npm run rehearse
+```
+
+One classifier pass, then the policy replayed at every threshold in a sweep —
+so the curve is a controlled experiment rather than fifty separate ones. The
+report lands in `docs/static/rehearsal/latest.json`, the
+[metrics page](https://wiggapony0925.github.io/moderato/rehearsal) renders it,
+and CI fails if the committed numbers do not match a fresh run.
+
+The corpus lives in `corpus/*.jsonl` and is meant to be forked. These numbers
+are measured against one idea of acceptable; replace the cases with text from
+your own product and re-run, and only then do they mean anything about your
+users.
+
 ## Contributing
 
 ```bash
 npm install
-npm test           # 141 tests
+npm test                 # 143 tests
 npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point
+npm run rehearse         # regenerate the metrics
+npm run check:docs       # no undocumented or stale API
+npm run docs:start       # the site, locally
 ```
+
+Documentation is not optional here: `check:docs` fails CI on a public export
+no page mentions, and on a docs page importing a name that no longer exists.
 
 ## License
 

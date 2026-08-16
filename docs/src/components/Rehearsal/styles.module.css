@@ -1,0 +1,115 @@
+.root {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--viz-text-secondary);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--viz-border);
+}
+.meta strong {
+  color: var(--viz-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.callout {
+  border-left: 3px solid var(--viz-warning);
+  background: var(--viz-surface-sunk);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1.1rem;
+}
+.callout p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.readout {
+  border: 1px solid var(--viz-border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  background: var(--viz-surface);
+}
+.readout h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.shippedPill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--viz-surface-sunk);
+  border: 1px solid var(--viz-border);
+  color: var(--viz-text-secondary);
+}
+
+.dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.6rem;
+  margin: 0 0 0.9rem;
+}
+.dl > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.dl dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--viz-text-muted);
+}
+.dl dd {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  color: var(--viz-text);
+}
+
+.table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+.tagBar {
+  display: inline-block;
+  vertical-align: middle;
+  width: 72px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--viz-surface-sunk);
+  margin-right: 0.5rem;
+  overflow: hidden;
+}
+.tagFill {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+}
+.cellText {
+  max-width: 24rem;
+  word-break: break-word;
+}
+.cellNote {
+  color: var(--viz-text-secondary);
+  max-width: 20rem;
+}

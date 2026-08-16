@@ -175,6 +175,6 @@ export const PROFANITY_PRESET: WordlistEntry[] = [
  * that's the point of choosing it.
  */
 export const PROFANITY_PRESET_STRICT: WordlistEntry[] = [
-  { category: "profanity", score: 0.72, words: [...EN_PROFANITY] },
+  { category: "profanity", score: 0.72, words: Array.from(EN_PROFANITY) },
   { category: "hate", score: 0.99, words: HATE_WORDS },
 ];

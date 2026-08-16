@@ -28,9 +28,9 @@ jobs:
       - run: npm test
 
   package:
-    # The check that catches what tests cannot: the published tarball
-    # resolving from `dist` while the repo develops from `src`. There is no
-    # undo on a published version.
+    # The check that tests cannot do: the published tarball resolving from
+    # `dist` while the repo develops from `src`. There is no undo on a
+    # published version.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,3 +41,47 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run verify:package
+
+  rehearsal:
+    # Metrics are regenerated, never hand-written. If a policy change moves
+    # the numbers, the diff shows it in the same pull request as the change —
+    # nobody can update the code and leave a flattering old number on the
+    # docs site.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Rehearse against the corpus
+        # Pinned timestamp so the only diff is the metrics themselves.
+        run: REHEARSAL_AT=$(git log -1 --format=%cI) npm run rehearse
+      - name: Committed report matches a fresh run
+        run: |
+          if ! git diff --quiet -- docs/static/rehearsal/latest.json; then
+            echo "::error::docs/static/rehearsal/latest.json is stale."
+            echo "The policy or the corpus changed without regenerating the report."
+            echo "Run: npm run build && npm run rehearse — then commit the result."
+            git --no-pager diff -- docs/static/rehearsal/latest.json
+            exit 1
+          fi
+
+  docs:
+    # Two guards in one job. `check:docs` fails on an undocumented export or
+    # a page importing something that no longer exists; the site build fails
+    # if any live example on it does not compile against the real dist.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check:docs
+      - run: npm ci --prefix docs
+      - run: npm --prefix docs run build
