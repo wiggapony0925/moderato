@@ -84,6 +84,18 @@ describe("decide", () => {
     expect(decide(result({ violence: 0.65 }), policy).action).toBe(REVIEW);
   });
 
+  it("ignores a category whose review threshold is unreachable", () => {
+    // The documented opt-out: "this category is not a problem here." It has
+    // to beat the provider's own flag as well as the score, or it only works
+    // for providers that happen not to flag — which is not an opt-out.
+    const policy = { categories: { sexual: { review: Infinity } } };
+    expect(decide(result({ sexual: 0.99 }, { sexual: true }), policy).action).toBe(
+      ALLOW,
+    );
+    // And only that category.
+    expect(decide(result({ hate: 0.7 }, { hate: true }), policy).action).toBe(REVIEW);
+  });
+
   it("sorts tripped categories worst-first, for a ranked queue", () => {
     const verdict = decide(
       result({ harassment: 0.6, violence: 0.9, hate: 0.75 }),

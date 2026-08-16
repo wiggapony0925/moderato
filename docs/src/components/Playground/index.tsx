@@ -23,11 +23,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  POLICY_PRESETS,
-  PROFANITY_PRESET,
-  createModerato,
-  wordlistProvider,
+  defineModeration,
   type Action,
+  type CategoryRule,
   type Verdict,
 } from "moderato";
 import { useModeratedField } from "moderato/react";
@@ -48,20 +46,67 @@ import styles from "./styles.module.css";
 type Surface = "comment" | "identity";
 
 /**
- * Two engines, because the recommendation differs by surface. A username has
- * no spaces to tokenise on, so identity fields get the fused scan; body text
- * already has whitespace doing that job.
+ * What the rules panel is currently set to.
+ *
+ * Everything here maps onto a real `defineModeration` field, and the panel
+ * prints the config it adds up to. That is the point: you fiddle until the
+ * verdicts match what your product wants, then copy the object out.
  */
-const ENGINES: Record<Surface, ReturnType<typeof createModerato>> = {
-  comment: createModerato({
-    provider: wordlistProvider(PROFANITY_PRESET),
-    cache: false,
-  }),
-  identity: createModerato({
-    provider: wordlistProvider(PROFANITY_PRESET, { scanFused: true }),
-    cache: false,
-  }),
+interface Rules {
+  profanity: CategoryRule;
+  hate: CategoryRule;
+  personalData: boolean;
+  allow: string;
+}
+
+/** The shipped behaviour, so "default" has something to mean. */
+const DEFAULT_RULES: Rules = {
+  profanity: "review",
+  hate: "block",
+  personalData: false,
+  allow: "",
 };
+
+const words = (value: string): string[] =>
+  value
+    .split(/[,\n]/)
+    .map((word) => word.trim())
+    .filter(Boolean);
+
+/**
+ * Only the settings that differ from the defaults become rules.
+ *
+ * The distinction is real, not tidiness. A rule is an instruction, and an
+ * explicit `profanity: "review"` says "never refuse this" — which is a
+ * downgrade on a username, where the whole point is that profanity refuses.
+ * Saying nothing leaves the surface's own judgement in place.
+ */
+function activeRules(rules: Rules): Record<string, CategoryRule> {
+  const out: Record<string, CategoryRule> = {};
+  if (rules.profanity !== DEFAULT_RULES.profanity) out.profanity = rules.profanity;
+  if (rules.hate !== DEFAULT_RULES.hate) out.hate = rules.hate;
+  return out;
+}
+
+/** The config those settings add up to — the thing you copy into your app. */
+function configSource(rules: Rules): string {
+  const lines: string[] = [];
+  const ruled = Object.entries(activeRules(rules)).map(
+    ([name, value]) => `${name}: "${value}"`,
+  );
+  if (ruled.length > 0) lines.push(`  rules: { ${ruled.join(", ")} },`);
+
+  const allowed = words(rules.allow);
+  if (allowed.length > 0) {
+    lines.push(`  allow: [${allowed.map((w) => `"${w}"`).join(", ")}],`);
+  }
+  if (rules.personalData) lines.push(`  personalData: "all",`);
+  lines.push("  surfaces: {");
+  lines.push(`    comment: { kind: "body" },`);
+  lines.push(`    username: { kind: "identity" },`);
+  lines.push("  },");
+  return `defineModeration({\n${lines.join("\n")}\n});`;
+}
 
 const SURFACES: Array<{ id: Surface; label: string; hint: string }> = [
   {
@@ -88,6 +133,7 @@ const SURFACES: Array<{ id: Surface; label: string; hint: string }> = [
 /** The board is a pipeline; the wires say so even after you rearrange it. */
 const CONNECTIONS = [
   { from: "composer", to: "verdict" },
+  { from: "rules", to: "verdict" },
   { from: "verdict", to: "corpus" },
 ];
 
@@ -139,17 +185,35 @@ function Panel({
 
 export default function Playground(): JSX.Element {
   const [surface, setSurface] = useState<Surface>("comment");
+  const [rules, setRules] = useState<Rules>(DEFAULT_RULES);
   const [cases, setCases] = useState<LabelledCase[]>(() => loadCases());
   const [answering, setAnswering] = useState(false);
   const [correction, setCorrection] = useState<Action | null>(null);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState<string | null>(null);
 
-  const policy =
-    surface === "identity" ? POLICY_PRESETS.identity : POLICY_PRESETS.balanced;
+  // Rebuilt whenever the rules panel changes, which is exactly what a real
+  // app does not do — but here the whole point is watching the config move
+  // the verdict. It is the offline layer only: static site, no vendor key.
+  const moderation = useMemo(
+    () =>
+      defineModeration<Surface>({
+        rules: activeRules(rules),
+        allow: words(rules.allow),
+        ...(rules.personalData ? ({ personalData: "all" } as const) : {}),
+        cache: false,
+        surfaces: {
+          comment: { kind: "body" },
+          identity: { kind: "identity" },
+        },
+      }),
+    [rules],
+  );
+
+  const { engine, policy } = moderation.field(surface);
 
   const field = useModeratedField({
-    engine: ENGINES[surface],
+    engine,
     policy,
     // Every verdict is interesting here, not just the refusals.
     blockOn: ["block", "review"],
@@ -161,6 +225,16 @@ export default function Playground(): JSX.Element {
 
   const verdict: Verdict | null = field.verdict;
   const text = field.value.trim();
+
+  // Change a rule and the verdict on screen has to move with it, or the panel
+  // is describing a config that is not the one being applied.
+  const recheck = useRef(field.check);
+  recheck.current = field.check;
+  const hasText = text.length > 0;
+  useEffect(() => {
+    if (hasText) void recheck.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moderation, surface, hasText]);
 
   const reset = useCallback(() => {
     setAnswering(false);
@@ -330,6 +404,132 @@ export default function Playground(): JSX.Element {
               </button>
             ))}
           </div>
+        </Panel>
+
+        <Panel
+          id="rules"
+          title="Your rules"
+          hint="What a product would ship. Change one and the verdict moves."
+          actions={
+            <div className={styles.panelActions}>
+              <button
+                type="button"
+                className={styles.ghost}
+                onClick={() => setRules(DEFAULT_RULES)}
+                disabled={
+                  rules.profanity === DEFAULT_RULES.profanity &&
+                  rules.hate === DEFAULT_RULES.hate &&
+                  rules.personalData === DEFAULT_RULES.personalData &&
+                  rules.allow === DEFAULT_RULES.allow
+                }
+              >
+                Defaults
+              </button>
+            </div>
+          }
+        >
+          {(
+            [
+              {
+                key: "profanity" as const,
+                label: "Profanity",
+                hint: "Swearing. Allowed on plenty of grown-up products.",
+              },
+              {
+                key: "hate" as const,
+                label: "Slurs and hate",
+                hint: "Refused by default, and worth leaving that way.",
+              },
+            ]
+          ).map((row) => (
+            <div className={styles.ruleRow} key={row.key}>
+              <div className={styles.ruleLabels}>
+                <span className={styles.ruleName}>{row.label}</span>
+                <span className={styles.ruleHint}>{row.hint}</span>
+              </div>
+              <div
+                className={styles.segmented}
+                role="radiogroup"
+                aria-label={`${row.label} rule`}
+              >
+                {(["allow", "review", "block"] as CategoryRule[]).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={rules[row.key] === value}
+                    className={
+                      rules[row.key] === value ? styles.segOn : styles.seg
+                    }
+                    onClick={() => {
+                      setRules((r) => ({ ...r, [row.key]: value }));
+                      reset();
+                    }}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className={styles.ruleRow}>
+            <div className={styles.ruleLabels}>
+              <span className={styles.ruleName}>Personal data</span>
+              <span className={styles.ruleHint}>
+                Cards, SSNs, phones, emails, coordinates — each one validated,
+                not just pattern-matched.
+              </span>
+            </div>
+            <div className={styles.segmented} role="radiogroup" aria-label="Personal data">
+              {[
+                { on: false, label: "off" },
+                { on: true, label: "detect" },
+              ].map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  role="radio"
+                  aria-checked={rules.personalData === option.on}
+                  className={
+                    rules.personalData === option.on ? styles.segOn : styles.seg
+                  }
+                  onClick={() => {
+                    setRules((r) => ({ ...r, personalData: option.on }));
+                    reset();
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className={styles.ruleName} htmlFor="playground-allow">
+            Words you allow anyway
+          </label>
+          <p className={styles.ruleHint}>
+            Matched the way listed words are, so allowing “ass” allows “@ss”
+            and “a s s” too. Comma-separated.
+          </p>
+          <input
+            id="playground-allow"
+            className={styles.noteInput}
+            value={rules.allow}
+            placeholder="damn, hell, ass"
+            spellCheck={false}
+            onChange={(event) => {
+              setRules((r) => ({ ...r, allow: event.target.value }));
+              reset();
+            }}
+          />
+
+          <p className={styles.ruleName} style={{ marginTop: "0.9rem" }}>
+            The config this is
+          </p>
+          <pre className={styles.config}>
+            <code>{configSource(rules)}</code>
+          </pre>
         </Panel>
 
         <Panel

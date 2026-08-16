@@ -4,6 +4,41 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`defineModeration()`** — the front door. One config object in product
+  terms (`tolerance`, `audience`, `rules`, `allow`, `deny`, `personalData`,
+  `surfaces`) that assembles the engines, providers and policies you would
+  otherwise assemble by hand, and hands them back so you can drop to the parts
+  at any point. See [Your rules](https://wiggapony0925.github.io/moderato/docs/configuring).
+- **Category rules** — `rules: { profanity: "allow" }`. A whole category
+  permitted, queued or refused, in the words a product team uses. An explicit
+  rule beats the tolerance, the audience defaults and the surface's own
+  judgement, which is what makes it a rule; scope it to a surface when the
+  decision is surface-shaped.
+- **`WordlistOptions.allow`** — words your product is fine with, even though
+  the vocabulary lists them. Matched with the same evasion-resistant matcher
+  as listed words, so allowing `"ass"` also allows `"@ss"` and `"a s s"`. An
+  allowance somebody can type around is not a setting.
+- **`Moderation#mask`** — the offline masking pass, honouring the same
+  allowances and rules as the screening.
+- **A rules panel in the playground.** Every control is a real
+  `defineModeration` field, the verdict on screen re-derives as you change
+  them, and the panel prints the config being applied — copy it into your app.
+
+### Fixed
+
+- **`categories: { x: { review: Infinity } }` did not actually ignore a
+  category.** The docs described it as the way to opt out of a category
+  entirely, and it suppressed the *score* path while a provider's own `flag`
+  walked straight past it — so `piiProvider`, which flags, was never opted out
+  of. An unreachable review threshold now drops the category regardless of how
+  it was raised.
+
+---
+
 ## [1.0.0]
 
 **The first stable release.** From here the public API is a promise: see

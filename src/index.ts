@@ -44,6 +44,18 @@ export {
   decide,
 } from "./policy.js";
 
+export { defineModeration } from "./define.js";
+export type {
+  Audience,
+  CategoryRule,
+  Moderation,
+  ModerationConfig,
+  PersonalDataName,
+  SurfaceConfig,
+  SurfaceKind,
+  Tolerance,
+} from "./define.js";
+
 export {
   DEFAULT_CACHE_ENTRIES,
   DEFAULT_CACHE_TTL_MS,
@@ -84,7 +96,7 @@ export {
   findTerms,
   wordlistProvider,
 } from "./providers/wordlist.js";
-export type { WordlistEntry } from "./providers/wordlist.js";
+export type { WordlistEntry, WordlistOptions } from "./providers/wordlist.js";
 export { EN_PROFANITY } from "./vocab/en.js";
 export { normalizeTokens } from "./normalize.js";
 export { hashes, labelled, maskSpans } from "./mask.js";

@@ -23,6 +23,48 @@ Every name below is checked against the package's real exports on every CI run
 
 ## `moderato`
 
+### Setup
+
+The front door. One config object in product terms; it assembles the engines
+and policies you would otherwise assemble by hand. See [Your
+rules](./configuring.md).
+
+| export | signature |
+| --- | --- |
+| `defineModeration` | `(config?: ModerationConfig) => Moderation` |
+| `Moderation#screen` | `(text: string, surface?: string, options?: ScreenOptions) => Promise<Verdict>` |
+| `Moderation#field` | `(surface?: string) => { engine, policy }` — spread into `useModeratedField` |
+| `Moderation#mask` | `(text: string, surface?: string, mask?: Mask) => string` |
+| `Moderation#engineFor` | `(surface?: string) => Moderato` |
+| `Moderation#policyFor` | `(surface?: string) => PolicyConfig` |
+| `Moderation#surfaces` | `string[]` — the names you declared |
+
+```ts
+interface ModerationConfig {
+  tolerance?: "strict" | "balanced" | "open";   // default "balanced"
+  audience?: "general" | "adult" | "minor";     // default "general"
+  rules?: Record<string, "allow" | "review" | "block">;
+  allow?: string[];                             // words, matched evasion-resistantly
+  deny?: string[] | Record<string, string[]>;   // words, always refused
+  personalData?: Array<PersonalDataName | PiiCategory> | "all" | "none";
+  vocabulary?: WordlistEntry[];                 // replaces PROFANITY_PRESET
+  provider?: ModerationProvider | ModerationProvider[];  // runs after the matcher
+  surfaces?: Record<string, SurfaceConfig>;
+  timeoutMs?: number;
+  failMode?: FailMode;
+  cache?: CacheConfig | false;
+  sink?: ModerationSink;
+}
+
+interface SurfaceConfig {
+  kind?: "body" | "identity";     // identity = permanent, public, no spaces
+  audience?: Audience;
+  allow?: string[];               // merged over the global ones
+  rules?: Record<string, CategoryRule>;
+  policy?: PolicyConfig;          // replace the derived policy entirely
+}
+```
+
 ### Engine
 
 | export | signature |
@@ -85,6 +127,10 @@ interface PolicyConfig {
   categories?: Record<string, { review?: number; block?: number }>;
 }
 ```
+
+A category with `review: Infinity` is ignored entirely — not scored lower, but
+dropped even when the provider flags it. That is the opt-out
+`rules: { x: "allow" }` compiles to.
 
 ### Providers
 
@@ -172,6 +218,8 @@ through. See [Personal data & age](./personal-data.md).
 
 Exported from the entry point that uses them:
 
+`Moderation` · `ModerationConfig` · `SurfaceConfig` · `SurfaceKind` ·
+`CategoryRule` · `Tolerance` · `Audience` · `PersonalDataName` ·
 `Action` · `Verdict` · `VerdictRule` · `PolicyConfig` · `CategoryThresholds` ·
 `ProviderResult` · `ModerationProvider` · `ModeratoConfig` · `ScreenInput` ·
 `ScreenOptions` · `ScreenResult` · `NormalizedInput` · `NormalizedToken` ·

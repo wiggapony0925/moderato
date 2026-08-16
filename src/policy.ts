@@ -229,6 +229,14 @@ export function decide(result: ProviderResult, policy: PolicyConfig = {}): Verdi
   scores.forEach((score, name) => {
     if (score >= reviewAt(name)) names.add(name);
   });
+  // An unreachable review threshold means "I do not care about this
+  // category" — the setting a product reaches for when its classifier
+  // reports something it has deliberately decided to permit. It has to beat
+  // the provider's own flag as well as the score, or the opt-out only works
+  // for providers that happen not to flag, which is not an opt-out.
+  names.forEach((name) => {
+    if (reviewAt(name) === Infinity) names.delete(name);
+  });
 
   const tripped = Array.from(names).sort((a, b) => scoreOf(b) - scoreOf(a));
   const worst = Math.max(0, ...Array.from(scores.values()));

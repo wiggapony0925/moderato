@@ -8,6 +8,12 @@ title: Quickstart
 Five minutes, three files. By the end you will have a field that warns people
 as they type, and a server that actually refuses the bad ones.
 
+:::tip Want the short version first?
+[`defineModeration`](./configuring.md) does all of the wiring below from one
+config object written in product terms — what you allow, what you refuse, which
+surfaces you have. Come back here when you want to know what it built.
+:::
+
 ## 1. Install
 
 ```bash

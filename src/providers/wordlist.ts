@@ -40,6 +40,21 @@ import { EN_PROFANITY } from "../vocab/en.js";
  * "bastard". It is a real precision/recall trade and the number is the dial.
  */
 export interface WordlistOptions {
+  /**
+   * Words this product is fine with, even though a preset lists them.
+   *
+   * This is the setting most people actually need, and the reason a preset
+   * cannot be a policy. Instagram allows "fuck" in a comment and does not
+   * allow slurs; a games community allows most of the list and none of the
+   * hate set; a school platform allows none of it. Same vocabulary, three
+   * different products, and none of them should be forking a wordlist to
+   * express that.
+   *
+   * Allowances are matched exactly the way listed words are — normalised,
+   * inflected, evasion-resistant — so allowing "ass" also allows "@ss" and
+   * "a s s", which is the point. If you allow a word, you have allowed it.
+   */
+  allow?: string[];
   /** Look for listed words INSIDE a longer token. Default false. */
   scanFused?: boolean;
   /** Shortest listed word allowed to match inside a longer token. Default 6. */
@@ -74,6 +89,20 @@ const tokenMatches = (token: NormalizedToken, word: string): boolean =>
 
 const collapseRuns = (token: string): string => token.replace(/(\p{L})\1+/gu, "$1");
 
+/**
+ * The allow list, prepared once.
+ *
+ * An allowance is checked with the same matcher as a listed word, so
+ * allowing "ass" allows "@ss", "a s s" and "asses" too. Anything less would
+ * be a setting that works until somebody types around it, which is not a
+ * setting, it is a trap.
+ */
+const prepareAllow = (words: string[] | undefined): string[] =>
+  (words ?? []).map((word) => word.toLowerCase().trim()).filter(Boolean);
+
+const isAllowed = (token: NormalizedToken, allow: string[]): boolean =>
+  allow.length > 0 && allow.some((word) => tokenMatches(token, word));
+
 /** A phrase matches when its words line up on consecutive tokens. */
 const phraseMatches = (tokens: NormalizedToken[], words: string[]): boolean => {
   outer: for (let start = 0; start + words.length <= tokens.length; start++) {
@@ -100,6 +129,7 @@ export function findTerms(
   const scanFused = options.scanFused === true;
   const minFusedLength = options.minFusedLength ?? 6;
   const minFusedToken = options.minFusedToken ?? 8;
+  const allow = prepareAllow(options.allow);
   const tokens = normalizeTokens(text);
   const found: Span[] = [];
 
@@ -113,6 +143,7 @@ export function findTerms(
     }
 
     for (const token of tokens) {
+      if (isAllowed(token, allow)) continue;
       const hit =
         singles.some((word) => tokenMatches(token, word)) ||
         (scanFused &&
@@ -135,6 +166,7 @@ export function findTerms(
       outer: for (let i = 0; i + phrase.length <= tokens.length; i++) {
         for (let j = 0; j < phrase.length; j++) {
           if (!tokenMatches(tokens[i + j]!, phrase[j]!)) continue outer;
+          if (isAllowed(tokens[i + j]!, allow)) continue outer;
         }
         const start = tokens[i]!.start;
         const end = tokens[i + phrase.length - 1]!.end;
@@ -158,6 +190,7 @@ export function wordlistProvider(
   const scanFused = options.scanFused === true;
   const minFusedLength = options.minFusedLength ?? 6;
   const minFusedToken = options.minFusedToken ?? 8;
+  const allow = prepareAllow(options.allow);
 
   // Precompile: lowercase everything, split phrases once, not per call.
   const prepared = entries.map((entry) => {
@@ -193,7 +226,10 @@ export function wordlistProvider(
       const flags: Record<string, boolean> = {};
       const scores: Record<string, number> = {};
       if (!input.text) return { flags, scores };
-      const tokens = normalizeTokens(input.text);
+      const all = normalizeTokens(input.text);
+      // Allowed words are removed before anything looks at them, so an
+      // allowance holds for the fused scan and the phrase pass as well.
+      const tokens = allow.length > 0 ? all.filter((t) => !isAllowed(t, allow)) : all;
       for (const entry of prepared) {
         // Exact-token lookups first (fast path for big vocabularies),
         // then the suffix pass, then phrases.

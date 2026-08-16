@@ -505,6 +505,117 @@
   z-index: 1;
 }
 
+/* ── rules panel ──
+   A row is a label and a control on one line, wrapping to two when the panel
+   is narrow. No boxes: the panel already has a border, and a setting inside a
+   card inside a card is not clearer, just fenced. */
+
+.ruleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.9rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.ruleRow:first-of-type {
+  padding-top: 0;
+}
+.ruleLabels {
+  display: grid;
+  gap: 0.1rem;
+  flex: 1 1 11rem;
+  min-width: 0;
+}
+.ruleName {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.ruleHint {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* Three-way switch. One track, one border — the selected segment is the
+   only thing that carries colour. */
+.segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.seg,
+.segOn {
+  font: inherit;
+  font-size: 0.75rem;
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.6rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.seg:hover {
+  color: var(--ink-1);
+}
+.segOn {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+.seg:focus-visible,
+.segOn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.config {
+  margin: 0.35rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.7625rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--ink-2);
+}
+
+/* Touch targets get a floor on small screens; small-caps at 12px is legible
+   but a 22px-tall button is not tappable. */
+@media (max-width: 600px) {
+  .seg,
+  .segOn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8125rem;
+  }
+  .ruleRow {
+    align-items: flex-start;
+  }
+  /* Full width, split evenly — two segments pinned to opposite edges of a
+     wide track read as two unrelated buttons, not one switch. */
+  .segmented {
+    flex: 1 1 100%;
+  }
+  .seg,
+  .segOn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
 /* ── full screen ── */
 
 .boardFocused {

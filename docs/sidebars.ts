@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
     "intro",
     "quickstart",
     "client-or-server",
+    "configuring",
     {
       type: "category",
       label: "Guides",

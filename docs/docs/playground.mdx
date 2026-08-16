@@ -8,8 +8,9 @@ import BrowserOnly from "@docusaurus/BrowserOnly";
 
 # Playground
 
-Type anything you like and watch what happens to it. Then tell us whether we
-got it right, which is the part that actually helps.
+Type anything you like and watch what happens to it. Change the rules until the
+verdicts match what your product wants, and copy the config out. Then tell us
+where we got it wrong, which is the part that actually helps.
 
 Drag the panels around by the handle in their corner if the layout is not where
 you want it; the board remembers.
@@ -81,3 +82,23 @@ queue), `clean`, or `not-screened`.
 
 Switch the surface selector to **Username** and try the same text again. It is
 the same classifier and a different policy — see [Policy](./policy.md).
+
+## The rules panel
+
+Everything in it is a real [`defineModeration`](./configuring.md) field, and the
+config it prints is literally the config being applied — the page builds its
+engine from that object, not from a parallel copy of it. So it is worth using
+the way you would use a spreadsheet: set profanity to **allow**, type the thing
+your users keep getting refused for, and see whether you like the answer.
+
+Two behaviours worth noticing while you play with it:
+
+**A rule reaches every surface.** Set profanity to *allow* and try a username —
+it is allowed there too. An explicit rule is an instruction, and it beats the
+surface's own stricter judgement. If you only meant comments, the config puts
+the rule on the comment surface instead.
+
+**An allowance survives disguise.** Put `ass` in the allow box and try `@ss`,
+`a s s`, `asses`. All allowed, because an allowance is matched with the same
+evasion-resistant matcher as a listed word. An allowance somebody can type
+around is not a setting, it is a trap.

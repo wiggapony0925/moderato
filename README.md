@@ -93,7 +93,60 @@ policy, and the same `decide()` runs on both sides so they agree.
 
 ---
 
+## Your rules, in one object
+
+No two products want the same moderation, and most of them do not want the
+default. Instagram allows swearing in comments; a children's game allows none
+of it; a dating app allows adult content a school platform would refuse on
+sight. `defineModeration` is where you say which one you are.
+
+```ts
+import { defineModeration, httpProvider } from "moderato";
+
+export const moderation = defineModeration({
+  deny: ["ourcompetitor"],         // never, anywhere
+  personalData: ["card", "ssn"],
+  surfaces: {
+    // People swear in comments. A handle is permanent, so it doesn't get to.
+    comment:  { kind: "body", rules: { profanity: "allow" } },
+    username: { kind: "identity" },
+    kidsChat: { kind: "body", audience: "minor" },
+  },
+  provider: httpProvider({ url: "/api/moderate" }),
+});
+
+await moderation.screen(text, "comment");         // → a verdict
+useModeratedField({ ...moderation.field("username") });
+moderation.mask(text, "kidsChat");                // → hide it, don't refuse it
+```
+
+Three dials, deliberately different sizes:
+
+| dial | scope | reach for it when |
+| --- | --- | --- |
+| `rules` | a whole category — `"allow"` / `"review"` / `"block"` | the category is wrong for your product |
+| `allow` / `deny` | individual words | the category is right and a few members are not |
+| `surfaces` | where those apply | a username should not be judged like a comment |
+
+A rule beats everything else, including the surface's own judgement — so put it
+where it belongs. Top-level `{ profanity: "allow" }` allows swearing in
+usernames too, which is rarely what anyone means.
+
+Allowances are matched the same evasion-resistant way listed words are, so
+allowing `"ass"` allows `"@ss"` and `"a s s"` too — an allowance somebody can
+type around is not a setting, it's a trap.
+
+It builds the same engines and policies you'd have built by hand and hands them
+back (`engineFor`, `policyFor`), so you can drop to the parts at any point.
+Full guide: **[Your rules](https://wiggapony0925.github.io/moderato/configuring)**.
+
+---
+
 ## Install and wire up
+
+Everything below is what `defineModeration` assembles. Reach for it directly
+when you want per-category numeric thresholds, several providers with different
+timeout budgets, or surfaces that differ in ways rules can't express.
 
 ### The engine
 
@@ -510,7 +563,7 @@ users.
 
 ```bash
 npm install
-npm test                 # 189 tests
+npm test                 # 227 tests
 npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point
