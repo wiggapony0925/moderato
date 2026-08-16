@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
         "policy",
         "providers",
         "personal-data",
+        "any-backend",
       ],
     },
     "algorithm",
@@ -32,6 +33,7 @@ const sidebars: SidebarsConfig = {
     },
     "api",
     "limits",
+    "deploying",
     "upgrading",
   ],
 };

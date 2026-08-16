@@ -69,7 +69,7 @@ const CONFUSABLES: Record<string, string> = {
 };
 
 /** Zero-width and joiner characters used to split words invisibly. */
-const ZERO_WIDTH = /[​-‍⁠﻿]/g;
+const ZERO_WIDTH = /[​-‍⁠﻿]/u;
 
 export interface NormalizedToken {
   /** The token as typed (lowercased, de-accented, de-leeted). */
@@ -86,37 +86,65 @@ export interface NormalizedToken {
    * Keeping both forms costs one string per token and misses neither.
    */
   bare: string;
+  /**
+   * Where this token starts and ends in the ORIGINAL string.
+   *
+   * Needed for anything that wants to mask or highlight rather than refuse:
+   * replacing a matched word with "####" and letting the message through is
+   * very often the kinder answer, and you cannot do it without knowing which
+   * characters to replace. Offsets survive every transformation above —
+   * "f u c k" spans all seven characters, and a de-leeted "n1gger" spans all
+   * six.
+   */
+  start: number;
+  end: number;
 }
 
-/** One character of folded text: what it became, and whether we invented it. */
+/** One character of folded text: what it became, and where it came from. */
 interface Char {
   /** A letter, or " " for everything that is not one. */
   value: string;
   /** True when the leet map produced this letter from a non-letter. */
   substituted: boolean;
+  /** Offsets of the ORIGINAL character this came from. */
+  start: number;
+  end: number;
 }
 
-/** Lowercase, de-accent, de-leet one string; non-letters become spaces. */
+/**
+ * Lowercase, de-accent, de-leet one string; non-letters become spaces.
+ *
+ * Normalisation runs per source character rather than over the whole string,
+ * which is slightly slower and is the only way to keep offsets honest: NFKD
+ * changes lengths (a ligature becomes two letters, an accent becomes a letter
+ * plus a mark that is then dropped), so a position in the folded string tells
+ * you nothing about a position in what the user typed.
+ */
 function fold(text: string): Char[] {
-  const normalized = text
-    .normalize("NFKD")
-    .replace(/\p{M}/gu, "")
-    .replace(ZERO_WIDTH, "")
-    .toLowerCase();
   const out: Char[] = [];
-  for (const ch of normalized) {
-    // Homoglyph first: a Cyrillic "е" must become "e" before anything else
-    // decides whether it is a letter worth keeping.
-    const deconfused = CONFUSABLES[ch] ?? ch;
-    const mapped = LEET[deconfused] ?? deconfused;
-    const isLetter = /\p{L}/u.test(mapped);
-    out.push({
-      value: isLetter ? mapped : " ",
-      // A homoglyph swap is not a "substitution" in the `bare` sense — that
-      // variant exists to undo punctuation-as-letters, and a Cyrillic "е"
-      // was always meant to be a letter.
-      substituted: isLetter && mapped !== deconfused,
-    });
+  let index = 0;
+  for (const raw of text) {
+    const size = raw.length;
+    const start = index;
+    index += size;
+    if (ZERO_WIDTH.test(raw)) continue;
+    const decomposed = raw.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+    for (const ch of decomposed) {
+      // Homoglyph first: a Cyrillic "е" must become "e" before anything else
+      // decides whether it is a letter worth keeping.
+      const deconfused = CONFUSABLES[ch] ?? ch;
+      const mapped = LEET[deconfused] ?? deconfused;
+      const isLetter = /\p{L}/u.test(mapped);
+      out.push({
+        value: isLetter ? mapped : " ",
+        // A homoglyph swap is not a "substitution" in the `bare` sense — that
+        // variant exists to undo punctuation-as-letters, and a Cyrillic "е"
+        // was always meant to be a letter.
+        substituted: isLetter && mapped !== deconfused,
+        start,
+        end: start + size,
+      });
+    }
   }
   return out;
 }
@@ -127,6 +155,8 @@ interface RawToken {
   word: string;
   /** Parallel to `word`'s characters. */
   substituted: boolean[];
+  start: number;
+  end: number;
 }
 
 /** Split folded characters into words, keeping the substitution flags. */
@@ -134,8 +164,10 @@ function split(chars: Char[]): RawToken[] {
   const tokens: RawToken[] = [];
   let word = "";
   let substituted: boolean[] = [];
+  let start = 0;
+  let end = 0;
   const flush = () => {
-    if (word) tokens.push({ word, substituted });
+    if (word) tokens.push({ word, substituted, start, end });
     word = "";
     substituted = [];
   };
@@ -144,6 +176,8 @@ function split(chars: Char[]): RawToken[] {
       flush();
       continue;
     }
+    if (!word) start = ch.start;
+    end = ch.end;
     word += ch.value;
     substituted.push(ch.substituted);
   }
@@ -163,6 +197,10 @@ function bareOf({ word, substituted }: RawToken): string {
 const merge = (tokens: RawToken[]): RawToken => ({
   word: tokens.map((t) => t.word).join(""),
   substituted: tokens.flatMap((t) => t.substituted),
+  // A merged run spans everything between its first and last letter, so
+  // masking "f u c k" replaces the spaces too.
+  start: tokens[0]!.start,
+  end: tokens[tokens.length - 1]!.end,
 });
 
 /**
@@ -192,5 +230,7 @@ export function normalizeTokens(text: string): NormalizedToken[] {
     exact: token.word,
     collapsed: collapseRuns(token.word),
     bare: bareOf(token),
+    start: token.start,
+    end: token.end,
   }));
 }

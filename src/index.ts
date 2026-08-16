@@ -81,11 +81,14 @@ export type { LocalRule } from "./providers/local.js";
 export {
   PROFANITY_PRESET,
   PROFANITY_PRESET_STRICT,
+  findTerms,
   wordlistProvider,
 } from "./providers/wordlist.js";
 export type { WordlistEntry } from "./providers/wordlist.js";
 export { EN_PROFANITY } from "./vocab/en.js";
 export { normalizeTokens } from "./normalize.js";
+export { hashes, labelled, maskSpans } from "./mask.js";
+export type { Mask, Span } from "./mask.js";
 export type { NormalizedToken } from "./normalize.js";
 export { mockProvider } from "./providers/mock.js";
 export type { MockProviderOptions } from "./providers/mock.js";

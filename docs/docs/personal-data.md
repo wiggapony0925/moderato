@@ -113,6 +113,43 @@ createModerato({
 });
 ```
 
+## Masking, instead of refusing
+
+Worth stealing from Roblox, whose chat filter does not refuse messages — it
+replaces the offending characters with hashes and sends the message anyway.
+
+Two things fall out of that which are easy to miss.
+
+**The conversation survives.** Somebody writes four sentences arranging a
+meet-up and one of them has their phone number in it. Refusing the whole
+message throws away the other three and tells them nothing useful.
+
+**The evader learns nothing.** A refusal is a signal: it tells someone exactly
+which word tripped, so they can go and find one that does not. Hashes tell
+them a filter exists and nothing else.
+
+```ts
+import { findTerms, findPii, maskSpans, hashes, labelled, PROFANITY_PRESET } from "moderato";
+
+const text = "call me on +44 7700 900123 you bastard";
+const spans = [...findTerms(text, PROFANITY_PRESET), ...findPii(text)];
+
+maskSpans(text, spans);            // "call me on ############### you #######"
+maskSpans(text, spans, labelled);  // "call me on [phone removed] you [profanity removed]"
+maskSpans(text, spans, "***");     // "call me on *** you ***"
+```
+
+Offsets come from the tokeniser, so they point at what was actually typed —
+`"f u c k"` masks as seven hashes, spaces included, and a de-leeted `n1gger`
+masks all six characters. Anything that finds spans works: `findTerms` for
+vocabulary, `findPii` for personal data, and your own detectors if they return
+`{ category, value, start, end }`.
+
+**It is not free.** Masking is silent about a real violation, so it belongs on
+ordinary vocabulary and personal information — not on threats. Use it where you
+would otherwise have queued something, and keep refusing what deserves
+refusing.
+
 ## Age, and who is asking
 
 > Should a 13-year-old be allowed to post something a 22-year-old can?

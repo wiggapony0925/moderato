@@ -15,6 +15,7 @@
  * corpus's multi-word entries work too.
  */
 
+import type { Span } from "../mask.js";
 import { normalizeTokens, type NormalizedToken } from "../normalize.js";
 import type {
   ModerationProvider,
@@ -83,6 +84,72 @@ const phraseMatches = (tokens: NormalizedToken[], words: string[]): boolean => {
   }
   return false;
 };
+
+/**
+ * Every listed word in `text`, with where it sits in the original string.
+ *
+ * The matching is identical to what the provider does — same normalisation,
+ * same inflections, same phrase and fused handling. The difference is that
+ * this reports WHERE, which is what anything that masks or highlights needs.
+ */
+export function findTerms(
+  text: string,
+  entries: WordlistEntry[],
+  options: WordlistOptions = {},
+): Span[] {
+  const scanFused = options.scanFused === true;
+  const minFusedLength = options.minFusedLength ?? 6;
+  const minFusedToken = options.minFusedToken ?? 8;
+  const tokens = normalizeTokens(text);
+  const found: Span[] = [];
+
+  for (const entry of entries) {
+    const singles: string[] = [];
+    const phrases: string[][] = [];
+    for (const raw of entry.words) {
+      const parts = raw.toLowerCase().split(/\s+/).filter(Boolean);
+      if (parts.length > 1) phrases.push(parts);
+      else if (parts[0]) singles.push(parts[0]);
+    }
+
+    for (const token of tokens) {
+      const hit =
+        singles.some((word) => tokenMatches(token, word)) ||
+        (scanFused &&
+          token.exact.length >= minFusedToken &&
+          singles.some(
+            (word) => word.length >= minFusedLength && token.exact.includes(word),
+          ));
+      if (hit) {
+        found.push({
+          category: entry.category,
+          value: text.slice(token.start, token.end),
+          start: token.start,
+          end: token.end,
+        });
+      }
+    }
+
+    // Phrases span from the first matched token to the last.
+    for (const phrase of phrases) {
+      outer: for (let i = 0; i + phrase.length <= tokens.length; i++) {
+        for (let j = 0; j < phrase.length; j++) {
+          if (!tokenMatches(tokens[i + j]!, phrase[j]!)) continue outer;
+        }
+        const start = tokens[i]!.start;
+        const end = tokens[i + phrase.length - 1]!.end;
+        found.push({
+          category: entry.category,
+          value: text.slice(start, end),
+          start,
+          end,
+        });
+      }
+    }
+  }
+
+  return found.sort((a, b) => a.start - b.start || b.end - a.end);
+}
 
 export function wordlistProvider(
   entries: WordlistEntry[],

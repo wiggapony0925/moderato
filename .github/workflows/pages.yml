@@ -1,0 +1,67 @@
+name: Deploy docs (GitHub Pages)
+
+# The no-computer path.
+#
+# Cloud Run needs `gcloud`, a signed-in machine, and credentials. This needs
+# a phone: turn Pages on in the repository settings, and every push builds
+# and publishes the site. No secrets, no CLI, no local checkout — GitHub
+# already has everything it needs.
+#
+# `workflow_dispatch` means you can also deploy on demand from the Actions
+# tab, which is two taps in the GitHub mobile app.
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      # The docs import the real built package, so the library has to exist
+      # before the site can resolve `moderato` to anything.
+      - run: npm run build
+      - run: npm run check:docs
+
+      - run: npm ci --prefix docs
+      - name: Build the site
+        env:
+          # Pages serves from https://<user>.github.io/<repo>/, so the site
+          # has to be built knowing it lives under a sub-path. Cloud Run
+          # serves from the root and sets neither of these.
+          DOCS_URL: ${{ steps.pages.outputs.origin || format('https://{0}.github.io', github.repository_owner) }}
+          DOCS_BASE_URL: /${{ github.event.repository.name }}/
+        run: npm --prefix docs run build
+
+      - uses: actions/configure-pages@v5
+        id: pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -19,6 +19,7 @@
  * a detector and a nuisance.
  */
 
+import { labelled, maskSpans, type Mask } from "../mask.js";
 import type {
   ModerationProvider,
   NormalizedInput,
@@ -210,17 +211,9 @@ export function findPii(text: string, options: PiiOptions = {}): PiiMatch[] {
  */
 export function redactPii(
   text: string,
-  options: PiiOptions & { mask?: (match: PiiMatch) => string } = {},
+  options: PiiOptions & { mask?: Mask } = {},
 ): string {
-  const mask = options.mask ?? ((m) => `[${m.category.replace("pii/", "")} removed]`);
-  const matches = findPii(text, options);
-  let out = "";
-  let cursor = 0;
-  for (const match of matches) {
-    out += text.slice(cursor, match.start) + mask(match);
-    cursor = match.end;
-  }
-  return out + text.slice(cursor);
+  return maskSpans(text, findPii(text, options), options.mask ?? labelled);
 }
 
 /**

@@ -106,7 +106,8 @@ interface PolicyConfig {
 | `PROFANITY_PRESET` | curated wordlist entries |
 | `PROFANITY_PRESET_STRICT` | the full LDNOOBW corpus + the hate set |
 | `EN_PROFANITY` | the raw corpus array |
-| `normalizeTokens` | `(text: string) => NormalizedToken[]` — the anti-evasion tokeniser |
+| `normalizeTokens` | `(text: string) => NormalizedToken[]` — the anti-evasion tokeniser, with source offsets |
+| `findTerms` | `(text, entries, options?) => Span[]` — matches, with where they are |
 
 ### Media
 
@@ -119,6 +120,17 @@ interface PolicyConfig {
 | `frameTimestamps` | `(duration: number, frames: number) => number[]` |
 | `VideoUnsupportedError` | thrown where video cannot be decoded |
 | `DEFAULT_FRAMES` / `DEFAULT_FRAME_DIMENSION` | `6` / `512` |
+
+### Masking
+
+The third outcome: replace the offending characters and let the message
+through. See [Personal data & age](./personal-data.md).
+
+| export | |
+| --- | --- |
+| `maskSpans` | `(text: string, spans: Span[], mask?: Mask) => string` |
+| `hashes` | the Roblox rendering — `####`, length preserved |
+| `labelled` | `[phone removed]`, when hiding the removal would be worse |
 
 ### Refusals and utilities
 
@@ -165,7 +177,7 @@ Exported from the entry point that uses them:
 `ScreenOptions` · `ScreenResult` · `NormalizedInput` · `NormalizedToken` ·
 `ImagePart` · `ImageSource` · `VideoConfig` · `FrameEnv` · `CacheConfig` ·
 `FailMode` · `ModerationEvent` · `ModerationSink` · `RefusalOptions` ·
-`WordlistEntry` · `WordlistOptions` · `PiiCategory` · `PiiMatch` · `PiiOptions` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
+`WordlistEntry` · `WordlistOptions` · `PiiCategory` · `PiiMatch` · `PiiOptions` · `Span` · `Mask` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
 `OpenAIProviderOptions` · `MockProviderOptions` · `ModeratedField` ·
 `UseModeratedFieldOptions` · `FieldCheck` · `ModeratedSubmit` ·
 `ModeratedSubmitOptions` · `MutationLike` · `MutationCallbacks` ·
