@@ -87,6 +87,21 @@ wordlistProvider([
 ]);
 ```
 
+### Fused tokens, for identity fields
+
+A username has no spaces in it, so whole-token matching finds nothing inside
+`niggercollector`. Turn on the fused scan for those fields:
+
+```ts
+wordlistProvider(PROFANITY_PRESET, { scanFused: true });
+```
+
+It looks for listed words **inside** longer tokens — but only words of six
+letters or more, which is what keeps `Scunthorpe`, `assassin`, `cockpit` and
+`Dickinson` safe. The short words are the ones that hide inside innocent long
+words; the ones worth finding welded into a handle are long. See
+[How it works](./algorithm.mdx) for the measured effect.
+
 **It is still a wordlist.** It does not understand "I hate black people" — no
 listed word, no match — and it cannot see images at all, which is most of the
 risk. It is the free instant layer *in front of* a classifier, never the

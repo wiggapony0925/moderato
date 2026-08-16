@@ -93,7 +93,7 @@ interface PolicyConfig {
 | `openAIProvider` | `(options: OpenAIProviderOptions) => ModerationProvider` |
 | `OPENAI_MODERATION_MODEL` | `"omni-moderation-latest"` |
 | `httpProvider` | `(options: HttpProviderOptions) => ModerationProvider` |
-| `wordlistProvider` | `(entries: WordlistEntry[]) => ModerationProvider` |
+| `wordlistProvider` | `(entries: WordlistEntry[], options?: WordlistOptions) => ModerationProvider` |
 | `localProvider` | `(rules: LocalRule[]) => ModerationProvider` |
 | `mockProvider` | `(options?: MockProviderOptions) => ModerationProvider` |
 | `chainProviders` | `(providers, options?) => ModerationProvider` |
@@ -160,7 +160,7 @@ Exported from the entry point that uses them:
 `ScreenOptions` · `ScreenResult` · `NormalizedInput` · `NormalizedToken` ·
 `ImagePart` · `ImageSource` · `VideoConfig` · `FrameEnv` · `CacheConfig` ·
 `FailMode` · `ModerationEvent` · `ModerationSink` · `RefusalOptions` ·
-`WordlistEntry` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
+`WordlistEntry` · `WordlistOptions` · `LocalRule` · `ChainOptions` · `HttpProviderOptions` ·
 `OpenAIProviderOptions` · `MockProviderOptions` · `ModeratedField` ·
 `UseModeratedFieldOptions` · `FieldCheck` · `ModeratedSubmit` ·
 `ModeratedSubmitOptions` · `MutationLike` · `MutationCallbacks` ·

@@ -65,6 +65,7 @@
   --viz-seq-250: #86b6ef;
   --viz-seq-450: #2a78d6;
   --viz-seq-600: #184f95;
+  --viz-on-seq-strong: #ffffff;
 
   /* ── typography ── */
   --ifm-font-family-base: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
@@ -144,6 +145,7 @@
   --viz-seq-250: #256abf;
   --viz-seq-450: #3987e5;
   --viz-seq-600: #9ec5f4;
+  --viz-on-seq-strong: #10131a;
 
   --docusaurus-highlighted-code-line-bg: #232b38;
 }

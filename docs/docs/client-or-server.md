@@ -5,21 +5,59 @@ title: Client or server?
 
 # Client or server?
 
-**Both. They are different jobs, and only one of them is enforcement.**
+Short answer: **both**, and they are doing different jobs.
 
-|  | client | server |
+That sounds like a cop-out, so here is why it is not.
+
+## What each half is actually for
+
+Put a check in the browser and you can tell someone their username is a
+problem while they are still typing it. No round trip, no waiting, no filling
+in the rest of the signup form first. That is genuinely nice, and it costs you
+almost nothing.
+
+It is also completely optional from the user's point of view. Anyone can open
+the network tab, see the request your app makes, and make that request
+themselves without ever loading your JavaScript. So a browser check stops
+people who were not trying to get around it — which is most people, but not
+the ones you are worried about.
+
+Put the check on your server and it cannot be skipped. Every write goes
+through it. But now the only feedback anyone gets is after they hit submit,
+which means you find out your 40 MB video is unacceptable *after* uploading
+it.
+
+Neither half is optional. They just are not the same thing.
+
+|  | in the browser | on your server |
 | --- | --- | --- |
-| what it buys you | speed, manners, not wasting a 40 MB upload | truth |
-| can it be bypassed? | trivially — open the network tab | no |
-| holds the vendor key? | never | yes |
-| owns the refusal wording? | no | yes |
-| what happens if it is wrong | a moment of friction | a published slur, or a deleted real post |
+| what it gives you | speed, and not wasting people's time | the actual decision |
+| can it be skipped? | yes, trivially | no |
+| holds your API key? | never | yes |
+| owns the wording of a refusal? | no | yes |
+| if it is wrong | a moment of friction | a published slur, or a deleted real post |
 
-A client-only check is theatre. A server-only check is correct but rude: you
-learn your video is unacceptable *after* uploading it, and your username is
-rejected after you have filled in the whole signup form.
+So: **screen in both places, enforce in one.**
 
-So: **screen on both, enforce on one.**
+## How the two stay in agreement
+
+Here is the failure this is designed to avoid. Your browser check says the
+comment is fine. The user hits post. The server refuses it. They have no idea
+why, and nothing they try helps.
+
+Nobody files a bug for that. They just stop posting.
+
+It happens whenever the two halves have separate copies of the rules, because
+the copies drift the first time either one changes. So moderato does not have
+two copies. The decision is one pure function:
+
+```ts
+decide(result, policy);
+```
+
+No network, no state, no clock — just scores in, verdict out. You pass the same
+policy object to both halves, and they cannot disagree, because they are
+running the same code on the same input.
 
 ## The wiring
 
@@ -29,51 +67,41 @@ So: **screen on both, enforce on one.**
 │ useModeratedField  │  POST   │ createModerationHandler     │            │
 │  └ httpProvider ───┼────────▶│  └ engine ───────────┼─────▶│  OpenAI    │
 │                    │◀────────┤     └ policy         │      │            │
-│ useModeratedSubmit │  flags  └──────────────────────┘      └────────────┘
+│ useModeratedSubmit │  scores └──────────────────────┘      └────────────┘
 │  └ 422 → refusal   │◀───────  guard() throws 422 on the real write
 └────────────────────┘
 ```
 
-The browser never holds a credential. It asks your endpoint, your endpoint asks
-the vendor, and the raw scores come back so the client can apply its own policy
-locally — which is how a client can be *stricter* than the server without a
-second endpoint.
+The browser never holds a credential. It asks your endpoint; your endpoint asks
+the vendor. The raw scores come back, so the browser can apply its own policy
+locally — which is how a client can end up *stricter* than the server without
+needing a second endpoint.
 
-## Why the policy is a plain object
+## Three rules worth keeping
 
-`decide(result, policy)` is a pure function: no IO, no state, no clock. That is
-what lets the same policy object ship to both halves and produce the same answer
-in both places.
+**The browser is never the only screen.** Not because your users are hostile —
+almost none of them are — but because the few who are will find the gap in an
+afternoon, and by then the content is in your database.
 
-If the client re-implemented the rules, the two copies would drift the first
-time either changed, and the failure mode is the nasty kind — a user is told
-their post is fine, presses publish, and gets refused. Nobody files a bug for
-that. They just leave.
+**Refusal wording lives in one place on the server.** Six endpoints means six
+slightly different apologies, and one of them will end up being a raw list of
+classifier categories, which reads like an accusation and teaches people
+exactly what to route around. Keep the strings together and pass them to
+`guard()`.
 
-## What each half must never do
+**Nobody is told their post is "under review".** It published. It is live. Telling
+someone otherwise is untrue, and it teaches careful people to self-censor
+around a classifier's blind spots.
 
-**The client must never be the only screen.** Not because users are hostile —
-most are not — but because the ones who are will find the gap in an afternoon,
-and by then the content is in your database.
+## You can skip the browser half
 
-**The server must never invent its own refusal copy per endpoint.** Six handlers
-means six slightly different apologies, one of which is a raw category list that
-reads as an accusation and teaches evasion. Keep the strings in one registry and
-pass them to `guard()`.
+`useModeratedSubmit` on its own gives you consistent handling of the server's
+422 with no client-side screening at all. An engine with no provider configured
+returns `allow` with `screened: false`, which says plainly that nothing ran
+rather than pretending the text passed.
 
-**Neither should tell the author about a `review`.** The post is live. Saying
-"this is under review" for content that published fine is both untrue and
-chilling, and it teaches people to self-censor around a classifier's blind spots.
+That is a reasonable choice when your text is short and submitted immediately
+(there is no typing window to warn during), or when you do not want a second
+place where policy lives.
 
-## When you can skip the client half
-
-You can. `useModeratedSubmit` alone gives you consistent handling of the
-server's 422 with no client-side screening at all — that is the
-**server-authoritative mode**, and an engine with no provider configured returns
-`allow` with `screened: false` to say so honestly.
-
-Do that when: your text is short and submitted immediately (no typing window to
-warn during), or your bundle budget will not take a wordlist, or you simply do
-not want a second place where policy lives.
-
-Do **not** do it when someone is about to upload 40 MB.
+Do not skip it when somebody is about to upload something large.

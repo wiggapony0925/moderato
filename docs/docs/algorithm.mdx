@@ -1,0 +1,158 @@
+---
+id: algorithm
+title: How it works
+sidebar_label: How it works
+---
+
+import BrowserOnly from "@docusaurus/BrowserOnly";
+
+# How it works
+
+There is no magic here, and that is deliberate. This page walks through what
+actually happens to a piece of text, and then shows what each part of it is
+worth — measured, on a corpus you can read.
+
+## Two layers, doing different jobs
+
+The hard truth about moderation is that the two things you need are not
+available from the same place.
+
+You need something **instant**: it runs in the browser while somebody is still
+typing, it costs nothing, and it works offline. That has to be a matcher — a
+list of words and some careful string handling. A matcher will never understand
+context, so it will never know that "killer deal" is fine and "I'll kill you"
+is not.
+
+And you need something that **understands**: a classifier that can read "I hate
+black people" and see hate speech in a sentence containing no listed word. That
+costs a network round trip and a vendor relationship.
+
+So moderato runs both, cheap one first, and stops as soon as the cheap one is
+sure. Deliberate abuse never reaches your vendor bill; everything ambiguous
+still gets a real opinion.
+
+## The matcher, step by step
+
+Most wordlist filters lose to evasion that takes five seconds to perform. Here
+is what it takes not to.
+
+<BrowserOnly fallback={<p>Loading…</p>}>
+  {() => {
+    const { AlgorithmPipeline } = require("@site/src/components/Algorithm");
+    return <AlgorithmPipeline />;
+  }}
+</BrowserOnly>
+
+The thing worth noticing is that none of this is vocabulary work. Every
+technique above is defeated by better *tokenisation* — by being careful about
+what counts as a word — and none of it needs a bigger list.
+
+## What each layer is worth
+
+Claiming a filter is "evasion-resistant" means nothing without a number beside
+the same filter without the resistance. So here is the same corpus, the same
+policy, three matchers.
+
+<BrowserOnly fallback={<p>Loading…</p>}>
+  {() => {
+    const { AlgorithmAblation } = require("@site/src/components/Algorithm");
+    return <AlgorithmAblation />;
+  }}
+</BrowserOnly>
+
+Precision does not move. That is the part to check: it would be easy to buy
+recall by matching more loosely, and the bill for that arrives as real posts
+getting deleted. Every gain above came from understanding the input better, not
+from lowering the bar.
+
+## Evasion, one technique at a time
+
+<BrowserOnly fallback={<p>Loading…</p>}>
+  {() => {
+    const { AlgorithmEvasion } = require("@site/src/components/Algorithm");
+    return <AlgorithmEvasion />;
+  }}
+</BrowserOnly>
+
+### The two hard ones
+
+**The Scunthorpe problem** is the reason matching is whole-token by default. If
+you search for listed words as substrings, you flag a town in Lincolnshire, the
+word "classic", "assassin", "cockpit" and "Dickinson". Every filter that has
+ever embarrassed a company in public got this wrong.
+
+**The username problem** is the opposite, and it is why there is an exception. A
+handle has no spaces in it. "niggercollector" is one token, whole-token matching
+finds nothing in it, and that is exactly the shape abuse takes on identity
+fields. So `scanFused` looks inside long tokens — but only for listed words of
+six letters or more.
+
+Six is the number that separates the two problems. The words that hide inside
+innocent long words are all short: *ass* in assassin, *cunt* in Scunthorpe,
+*cock* in cockpit, *dick* in Dickinson. The words worth finding welded into a
+handle are long: *nigger*, *faggot*, *asshole*, *bastard*. One threshold, both
+problems.
+
+```ts
+// body text: whitespace already does the tokenising
+wordlistProvider(PROFANITY_PRESET);
+
+// identity fields: there is no whitespace to work with
+wordlistProvider(PROFANITY_PRESET, { scanFused: true });
+```
+
+## Where it is wrong
+
+Aggregates flatter. Here is every case placed in a grid.
+
+<BrowserOnly fallback={<p>Loading…</p>}>
+  {() => {
+    const { AlgorithmConfusion } = require("@site/src/components/Algorithm");
+    return <AlgorithmConfusion />;
+  }}
+</BrowserOnly>
+
+The two off-diagonal corners are not equally bad, and treating them as though
+they were is how moderation systems become hated.
+
+Letting something through is **visible**. Somebody reports it, you see it, you
+fix it. Refusing something you should not have is **invisible** — the person
+does not file a ticket explaining that your filter was wrong about their town,
+their surname, or their dialect. They just stop posting. That is why the default
+policy publishes anything it is not sure about, and why precision is the first
+number on the [metrics page](./rehearsal.mdx).
+
+## The policy is separate on purpose
+
+Everything above produces scores. Nothing above decides anything.
+
+The decision is one pure function — `decide(result, policy)` — with no IO, no
+state and no clock. Which means the identical decision runs on your server and
+in your users' browsers, and the two can never disagree about the rules. It also
+means the whole threshold sweep on the metrics page is one classifier pass and
+fifty policy evaluations: one variable, held properly.
+
+If you change nothing else, change the threshold to fit your own corpus. The
+default is defensible; it is not measured against *your* users.
+
+## Honest limits
+
+- The matcher is **English and Latin-script**. The homoglyph folding maps
+  Cyrillic and Greek look-alikes *into* Latin; it does nothing for text
+  genuinely written in another script, and the wordlist has no vocabulary for
+  it. See [Limits](./limits.md).
+- Nothing here reads **images or audio**. Images go to the classifier; video is
+  sampled to frames; audio is not read at all.
+- There is **no per-user state** — no repeat-offender tracking, no escalation.
+  That needs your database. The `sink` is the hook.
+- A classifier score is **not a compliance program**.
+
+## Reproduce all of it
+
+```bash
+npm run build && npm run rehearse
+```
+
+Every number on this page comes out of that command, from `corpus/*.jsonl`.
+Fork the corpus, put your own users' text in it, and re-run — that is the only
+version of this page whose numbers mean anything about your product.

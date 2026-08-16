@@ -14,7 +14,10 @@
  *   so stretched spellings match without turning "class" into "clas"
  *   for matching purposes (both variants are kept);
  * - offer a variant with leet-derived edges stripped, so "shit!" — which
- *   de-leets to "shiti", because "!" maps to "i" — still matches "shit".
+ *   de-leets to "shiti", because "!" maps to "i" — still matches "shit";
+ * - fold homoglyphs: Cyrillic "а", Greek "ο" and friends look exactly like
+ *   their Latin twins and are the least-effort evasion there is, because
+ *   the attacker does not even have to misspell anything.
  */
 
 const LEET: Record<string, string> = {
@@ -31,6 +34,38 @@ const LEET: Record<string, string> = {
   "$": "s",
   "!": "i",
   "+": "t",
+};
+
+/**
+ * Characters that LOOK like Latin letters and are not.
+ *
+ * This is the evasion that costs nothing to perform and, without a map like
+ * this, nothing to get away with: "nigger" typed with a Cyrillic "е" is a
+ * different string to every comparison in the world, and identical to every
+ * human eye. Unicode publishes a confusables table for exactly this; the
+ * subset below is the part that matters for Latin-script matching — Cyrillic
+ * and Greek letters whose common forms are visually identical.
+ *
+ * NFKD (applied first) already folds fullwidth forms, circled letters and
+ * the mathematical alphanumerics. It does NOT touch Cyrillic or Greek,
+ * because they are genuinely different letters — which is precisely why
+ * they work as a disguise.
+ */
+const CONFUSABLES: Record<string, string> = {
+  // Cyrillic
+  а: "a", в: "b", е: "e", к: "k", м: "m", н: "h", о: "o", р: "p", с: "c",
+  т: "t", у: "y", х: "x", і: "i", ј: "j", ѕ: "s", ԁ: "d", һ: "h", ԛ: "q",
+  ԝ: "w", ғ: "f", ц: "u", ь: "b",
+  // Greek
+  α: "a", β: "b", γ: "y", ε: "e", ζ: "z", η: "n", ι: "i", κ: "k", ν: "v",
+  ο: "o", ρ: "p", σ: "o", τ: "t", υ: "u", χ: "x", ϲ: "c", ϳ: "j", ѵ: "v",
+  // Latin look-alikes from other blocks
+  ı: "i", ȷ: "j", ɑ: "a", ɡ: "g", ɩ: "i",
+  // Small capitals (U+1D00 block and friends). No Unicode decomposition, so
+  // NFKD leaves them alone — and "ꜰucking" reads perfectly well to a person.
+  ᴀ: "a", ʙ: "b", ᴄ: "c", ᴅ: "d", ᴇ: "e", ꜰ: "f", ɢ: "g", ʜ: "h", ɪ: "i",
+  ᴊ: "j", ᴋ: "k", ʟ: "l", ᴍ: "m", ɴ: "n", ᴏ: "o", ᴘ: "p", ꞯ: "q", ʀ: "r",
+  ꜱ: "s", ᴛ: "t", ᴜ: "u", ᴠ: "v", ᴡ: "w", ʏ: "y", ᴢ: "z",
 };
 
 /** Zero-width and joiner characters used to split words invisibly. */
@@ -70,11 +105,17 @@ function fold(text: string): Char[] {
     .toLowerCase();
   const out: Char[] = [];
   for (const ch of normalized) {
-    const mapped = LEET[ch] ?? ch;
+    // Homoglyph first: a Cyrillic "е" must become "e" before anything else
+    // decides whether it is a letter worth keeping.
+    const deconfused = CONFUSABLES[ch] ?? ch;
+    const mapped = LEET[deconfused] ?? deconfused;
     const isLetter = /\p{L}/u.test(mapped);
     out.push({
       value: isLetter ? mapped : " ",
-      substituted: isLetter && mapped !== ch,
+      // A homoglyph swap is not a "substitution" in the `bare` sense — that
+      // variant exists to undo punctuation-as-letters, and a Cyrillic "е"
+      // was always meant to be a letter.
+      substituted: isLetter && mapped !== deconfused,
     });
   }
   return out;

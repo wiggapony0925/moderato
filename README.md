@@ -510,7 +510,7 @@ users.
 
 ```bash
 npm install
-npm test                 # 143 tests
+npm test                 # 151 tests
 npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point

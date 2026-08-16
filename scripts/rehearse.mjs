@@ -84,8 +84,19 @@ function loadCorpus() {
 
 // ── the classifier pass ──
 
-function buildProvider() {
-  const wordlist = wordlistProvider(PROFANITY_PRESET);
+/**
+ * The recommended production shape, per surface.
+ *
+ * Identity fields get the fused scan and body text does not. That is not an
+ * arbitrary split: a username has no spaces to tokenise on, so the fused
+ * scan is the only thing that finds "niggercollector" — while body text
+ * already has whitespace doing that job, and the scan would only add
+ * false-positive risk on long compound words for no recall.
+ */
+function buildProvider(surface) {
+  const wordlist = wordlistProvider(PROFANITY_PRESET, {
+    scanFused: surface === "identity",
+  });
   if (process.env.MODERATO_SCREEN_URL) {
     return {
       name: "http",
@@ -95,14 +106,60 @@ function buildProvider() {
   if (process.env.OPENAI_API_KEY) {
     return {
       name: "wordlist+openai",
-      provider: [
-        wordlist,
-        openAIProvider({ apiKey: process.env.OPENAI_API_KEY }),
-      ],
+      provider: [wordlist, openAIProvider({ apiKey: process.env.OPENAI_API_KEY })],
     };
   }
-  return { name: "wordlist", provider: wordlist };
+  return { name: wordlist.name, provider: wordlist };
 }
+
+/**
+ * The ablation set: what each defence is actually worth.
+ *
+ * A claim like "evasion-resistant" is worth nothing without a number next to
+ * a version of the same thing WITHOUT the resistance. So the corpus runs
+ * through four configurations under one identical policy, and the difference
+ * between the rows is the whole argument.
+ *
+ * `naive` is not a straw man — it is the twenty lines almost every team
+ * writes before they find out what they are up against.
+ */
+const NAIVE = {
+  name: "naive",
+  classify: async ({ text }) => {
+    const flags = {};
+    const scores = {};
+    if (!text) return { flags, scores };
+    const words = new Set(text.toLowerCase().split(/[^a-z]+/i).filter(Boolean));
+    for (const entry of PROFANITY_PRESET) {
+      if (entry.words.some((w) => words.has(w))) {
+        flags[entry.category] = true;
+        scores[entry.category] = entry.score ?? 0.9;
+      }
+    }
+    return { flags, scores };
+  },
+};
+
+const ABLATION = [
+  {
+    key: "naive",
+    label: "Naive wordlist",
+    detail: "lowercase, split on non-letters, exact word match",
+    provider: NAIVE,
+  },
+  {
+    key: "normalised",
+    label: "+ normalisation",
+    detail: "leetspeak, spacing, stretching, punctuation, homoglyphs",
+    provider: wordlistProvider(PROFANITY_PRESET),
+  },
+  {
+    key: "fused",
+    label: "+ fused scan",
+    detail: "listed words welded inside a longer token",
+    provider: wordlistProvider(PROFANITY_PRESET, { scanFused: true }),
+  },
+];
 
 /**
  * Classify every case once, keeping the raw scores. `screenDetailed` exists
@@ -110,14 +167,83 @@ function buildProvider() {
  * want to vary only the second half.
  */
 async function classifyAll(cases) {
-  const { name, provider } = buildProvider();
-  const engine = createModerato({ provider, cache: false });
+  const engines = new Map();
+  const names = new Set();
   const results = [];
   for (const item of cases) {
-    const { result } = await engine.screenDetailed({ text: item.text });
+    const surface = item.surface ?? "comment";
+    if (!engines.has(surface)) {
+      const { name, provider } = buildProvider(surface);
+      names.add(name);
+      engines.set(surface, createModerato({ provider, cache: false }));
+    }
+    const { result } = await engines.get(surface).screenDetailed({ text: item.text });
     results.push({ ...item, result: result ?? { flags: {}, scores: {} } });
   }
-  return { provider: name, results };
+  return { provider: Array.from(names).sort().join(" / "), results };
+}
+
+/** Run one provider over the whole corpus under one policy. */
+async function ablate(cases) {
+  const rows = [];
+  for (const config of ABLATION) {
+    const engine = createModerato({ provider: config.provider, cache: false });
+    const scored = [];
+    for (const item of cases) {
+      const { result } = await engine.screenDetailed({ text: item.text });
+      scored.push({ ...item, result: result ?? { flags: {}, scores: {} } });
+    }
+    const { failures, ...metrics } = evaluate(scored, SHIPPED);
+    rows.push({ key: config.key, label: config.label, detail: config.detail, ...metrics });
+  }
+  return rows;
+}
+
+/** Which evasion techniques survive. The corpus tags say which is which. */
+const EVASION_TAGS = [
+  ["leetspeak", "Leetspeak", "n1gg3r"],
+  ["spaced", "Spaced out", "n i g g e r"],
+  ["punctuation", "Punctuation", "shit!"],
+  ["stretched", "Stretched", "fuuuuck"],
+  ["homoglyph", "Homoglyphs", "Cyrillic е"],
+  ["fused", "Fused token", "niggercollector"],
+  ["substring", "Substring trap", "Scunthorpe"],
+  ["no-slur", "No listed word", "I hate <group>"],
+  ["non-english", "Non-English", "Spanish, Japanese"],
+];
+
+function evasionMatrix(results, blockScore) {
+  return EVASION_TAGS.map(([tag, label, example]) => {
+    const subset = results.filter((item) => (item.tags ?? []).includes(tag));
+    let caught = 0;
+    for (const item of subset) {
+      const verdict = decide(item.result, policyFor(item.surface, blockScore));
+      const actual = item.text.trim() ? verdict.action : "allow";
+      if (actual === item.expected) caught += 1;
+    }
+    return {
+      tag,
+      label,
+      example,
+      total: subset.length,
+      caught,
+      rate: subset.length ? round(caught / subset.length) : null,
+    };
+  }).filter((row) => row.total > 0);
+}
+
+/** Expected × actual, all nine cells. */
+function confusion(results, blockScore) {
+  const grid = {};
+  for (const expected of ACTIONS) {
+    grid[expected] = { allow: 0, review: 0, block: 0 };
+  }
+  for (const item of results) {
+    const verdict = decide(item.result, policyFor(item.surface, blockScore));
+    const actual = item.text.trim() ? verdict.action : "allow";
+    grid[item.expected][actual] += 1;
+  }
+  return grid;
 }
 
 // ── scoring ──
@@ -234,6 +360,9 @@ const report = {
   headline: { ...headline, failures: undefined },
   sweep,
   byTag: byTag(results, SHIPPED),
+  ablation: await ablate(cases),
+  evasion: evasionMatrix(results, SHIPPED),
+  confusion: confusion(results, SHIPPED),
   failures: headline.failures,
 };
 
@@ -261,6 +390,13 @@ console.log(`  precision   ${pct(headline.precision)}  (of what we refused, how 
 console.log(`  recall      ${pct(headline.recall)}  (of what deserved refusing, how much we caught)`);
 console.log(`  accuracy    ${pct(headline.accuracy)}  (exact allow/review/block match)`);
 console.log(`  auto-handled${pct(headline.autoHandled).padStart(7)}  (decided without a human)`);
+console.log("\n  ablation — what each defence is worth:");
+for (const row of report.ablation) {
+  console.log(
+    `    ${row.label.padEnd(18)} recall ${pct(row.recall).padStart(6)}` +
+      `   precision ${pct(row.precision).padStart(6)}   accuracy ${pct(row.accuracy).padStart(6)}`,
+  );
+}
 if (headline.failures.length) {
   console.log(`\n  ${headline.failures.length} case(s) the shipped policy gets wrong:`);
   for (const f of headline.failures.slice(0, 12)) {

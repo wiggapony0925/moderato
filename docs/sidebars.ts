@@ -15,6 +15,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: ["field-hook", "submit-hook", "uploads", "server", "policy", "providers"],
     },
+    "algorithm",
     {
       type: "category",
       label: "Evidence",

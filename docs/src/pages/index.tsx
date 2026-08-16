@@ -44,8 +44,8 @@ const PLACES = [
 const FACTS = [
   { value: "0", label: "runtime dependencies" },
   { value: "4", label: "entry points, all typed" },
-  { value: "143", label: "tests" },
-  { value: "52", label: "labelled corpus cases" },
+  { value: "151", label: "tests" },
+  { value: "60", label: "labelled corpus cases" },
 ];
 
 const SNIPPET = `import { useModeratedField } from "moderato/react";
@@ -197,13 +197,13 @@ export default function Home(): JSX.Element {
                 </span>
               </div>
               <div className={styles.evidenceStat}>
-                <span className={styles.evidenceValue}>52.9%</span>
+                <span className={styles.evidenceValue}>65%</span>
                 <span className={styles.evidenceLabel}>
-                  recall on the offline layer alone — published anyway
+                  recall from the offline layer alone — published anyway
                 </span>
               </div>
               <div className={styles.evidenceStat}>
-                <span className={styles.evidenceValue}>90.4%</span>
+                <span className={styles.evidenceValue}>88%</span>
                 <span className={styles.evidenceLabel}>
                   of cases decided with no moderator involved
                 </span>

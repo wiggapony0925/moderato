@@ -92,3 +92,67 @@ describe("wordlistProvider", () => {
     expect(result.scores.spam).toBeCloseTo(0.8);
   });
 });
+
+describe("homoglyphs — the evasion that costs nothing to perform", () => {
+  it("folds Cyrillic look-alikes", async () => {
+    // "nigger" with a Cyrillic "е": a different string to every comparison
+    // in the world, and identical to every human eye.
+    expect((await classify("you are a nigger")).flags.hate).toBe(true);
+    expect((await classify("nіgger")).flags.hate).toBe(true);
+    expect((await classify("ѕhit")).flags.profanity).toBe(true);
+  });
+
+  it("folds Greek look-alikes", async () => {
+    expect((await classify("what a bitch")).flags.profanity).toBe(true);
+    expect((await classify("cοck")).flags.profanity).toBe(true);
+  });
+
+  it("folds small-caps and other Latin blocks", async () => {
+    expect((await classify("ᴀ ꜰucking mess")).flags.profanity).toBe(true);
+  });
+
+  it("still leaves genuine non-Latin text alone", async () => {
+    // Japanese is not a disguise for anything; folding it would be wrong.
+    expect(Object.keys((await classify("これはテストです")).flags)).toEqual([]);
+  });
+});
+
+describe("fused tokens — the username problem", () => {
+  const fused = wordlistProvider(PROFANITY_PRESET, { scanFused: true });
+  const scan = (text: string) => fused.classify({ text, images: [] });
+
+  it("finds a slur welded into a handle", async () => {
+    // A username has no spaces to tokenise on, so whole-token matching
+    // finds nothing here — which is exactly the shape abuse takes there.
+    expect((await classify("niggercollector")).flags.hate).toBeUndefined();
+    expect((await scan("niggercollector")).flags.hate).toBe(true);
+    expect((await scan("xX_faggotslayer_Xx")).flags.hate).toBe(true);
+    expect((await scan("totalbastardguy")).flags.profanity).toBe(true);
+  });
+
+  it("does NOT resurrect the Scunthorpe problem", async () => {
+    // The guard is length: the words that live inside innocent long words
+    // are all short, and six characters excludes every one of them.
+    for (const clean of [
+      "Scunthorpe",
+      "assassination",
+      "classically",
+      "cockpitcrew",
+      "Dickinsonian",
+      "analystamy",
+      "shiitakemushrooms",
+      "therapistfinder",
+    ]) {
+      expect(Object.keys((await scan(clean)).flags)).toEqual([]);
+    }
+  });
+
+  it("leaves short tokens alone entirely", async () => {
+    expect(Object.keys((await scan("assess")).flags)).toEqual([]);
+  });
+
+  it("is off by default, because body text does not need it", async () => {
+    expect(wordlistProvider(PROFANITY_PRESET).name).toBe("wordlist");
+    expect(fused.name).toBe("wordlist+fused");
+  });
+});

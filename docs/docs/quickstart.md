@@ -5,8 +5,8 @@ title: Quickstart
 
 # Quickstart
 
-Five minutes, three files. At the end you have a field that screens as you type
-and a server that refuses the write.
+Five minutes, three files. By the end you will have a field that warns people
+as they type, and a server that actually refuses the bad ones.
 
 ## 1. Install
 
@@ -17,9 +17,9 @@ npm install moderato
 Requires Node ≥ 18 (for `fetch` / `Request`). React ≥ 18 only if you use the
 hooks.
 
-## 2. The server engine
+## 2. Set up the engine on your server
 
-The vendor key lives here and only here.
+This is where your API key lives, and the only place it should ever be.
 
 ```ts title="lib/moderation.ts"
 import { createModerato, openAIProvider, POLICY_PRESETS } from "moderato";
@@ -32,12 +32,14 @@ export const engine = createModerato({
 });
 ```
 
-`openAIProvider` throws if you construct it in a browser — that would ship your
-API key to every visitor.
+If you try to construct `openAIProvider` in a browser it throws on purpose.
+Bundling an API key into your frontend hands it to every visitor, and it is an
+easy mistake to make by accident.
 
-## 3. Refuse the write
+## 3. Refuse the bad writes
 
-One call at the top of every handler that publishes something.
+One call at the top of every handler that publishes something. This is the part
+that matters — everything after it is user experience.
 
 ```ts title="app/api/comments/route.ts"
 import { guard, isModerationError } from "moderato/server";
@@ -67,12 +69,15 @@ export async function POST(request: Request) {
 }
 ```
 
-That is the whole enforcement story. Everything below is user experience.
+A few things to notice. `guard()` throws only when the policy says *block*; a
+`review` verdict comes back normally, because that content is meant to publish.
+And opening the case is your code, not ours — it needs your database and your
+idea of what a case is.
 
-## 4. Screen the endpoint, not the key
+## 4. Let the browser screen through you
 
-Give the browser its own engine pointed at *your* server, so it can screen
-without ever holding a vendor credential.
+Now for the nice half. Give the browser its own engine, pointed at an endpoint
+on your own server, so it can screen text without ever holding a credential.
 
 ```ts title="app/api/moderate/route.ts"
 import { createModerationHandler } from "moderato/server";
@@ -99,10 +104,11 @@ export const engine = createModerato({
 });
 ```
 
-An array is a **chain**: the wordlist runs first and the request is never made
-if it hits. Deliberate abuse costs you nothing.
+Passing an array makes a **chain**. The wordlist runs first, and if it finds
+something the request is never made at all — so the obvious abuse costs you
+nothing, and everything ambiguous still gets a real opinion.
 
-## 5. Wrap the field
+## 5. Wrap the input
 
 ```tsx title="components/CommentBox.tsx"
 import { useModeratedField } from "moderato/react";
@@ -133,14 +139,18 @@ export function CommentBox({ onPublish }: { onPublish: (text: string) => void })
 }
 ```
 
-## What you now have
+The `check()` call before submitting matters more than it looks. Screening is
+debounced, so somebody who types something and immediately hits enter can beat
+it. `check()` cancels the wait and screens what is on screen right now.
 
-- a field that tells someone instantly, offline, for free, when they have typed
-  something obvious;
-- a server that refuses the write whether or not the browser cooperated;
-- one refusal message, owned by the backend, rendered identically everywhere;
-- a `review` signal for the cases a human should see, and nothing in the queue
-  that a machine could have decided.
+## What you have now
+
+- an input that tells people instantly — offline, for free — when they have
+  typed something obviously against the rules;
+- a server that refuses those writes whether or not the browser cooperated;
+- one refusal message, owned by your backend, that reads the same everywhere;
+- a `review` signal for the cases a person should look at, and nothing in that
+  queue that a machine could have decided on its own.
 
 ## Next
 

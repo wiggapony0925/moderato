@@ -61,6 +61,12 @@ export function SweepChart({
   const path = (key: "precision" | "recall") =>
     sweep.map((p, i) => `${i === 0 ? "M" : "L"}${x(p.threshold)} ${y(p[key])}`).join(" ");
 
+  /** The same line, closed to the baseline. A very light fill under a rate
+   *  curve makes the shape readable at a glance without competing with the
+   *  2px stroke that carries the actual value. */
+  const area = (key: "precision" | "recall") =>
+    `${path(key)} L${x(sweep[sweep.length - 1].threshold)} ${y(0)} L${x(sweep[0].threshold)} ${y(0)} Z`;
+
   const nearest = useCallback(
     (clientX: number): SweepPoint | null => {
       const svg = svgRef.current;
@@ -96,7 +102,7 @@ export function SweepChart({
         re-scored.
       </figcaption>
 
-      <div className="mdScroll">
+      <div className={`mdScroll ${styles.plot}`}>
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
@@ -149,6 +155,16 @@ export function SweepChart({
 
           {SERIES.map((s) => (
             <path
+              key={`${s.key}-area`}
+              d={area(s.key)}
+              fill={s.color}
+              opacity={0.07}
+              stroke="none"
+            />
+          ))}
+
+          {SERIES.map((s) => (
+            <path
               key={s.key}
               d={path(s.key)}
               fill="none"
@@ -185,6 +201,34 @@ export function SweepChart({
             </text>
           ))}
         </svg>
+        {hover && (
+          <div
+            className={styles.tooltip}
+            style={{
+              left: `${(x(hover.threshold) / W) * 100}%`,
+              transform:
+                x(hover.threshold) > W * 0.62
+                  ? "translate(-105%, 0)"
+                  : "translate(5%, 0)",
+            }}
+          >
+            <span className={styles.tooltipHead}>
+              blockScore {hover.threshold.toFixed(2)}
+            </span>
+            {SERIES.map((s) => (
+              <span key={s.key} className={styles.tooltipRow}>
+                <span className={styles.swatch} style={{ background: s.color }} aria-hidden />
+                {s.label}
+                <b>{pct(hover[s.key])}</b>
+              </span>
+            ))}
+            <span className={styles.tooltipRow}>
+              <span className={styles.swatchGhost} aria-hidden />
+              Queued
+              <b>{pct(hover.queueRate)}</b>
+            </span>
+          </div>
+        )}
       </div>
 
       <div className={styles.legend}>

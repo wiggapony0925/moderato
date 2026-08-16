@@ -23,6 +23,30 @@ import type {
 } from "../types.js";
 import { EN_PROFANITY } from "../vocab/en.js";
 
+/**
+ * How aggressive the matcher is allowed to be.
+ *
+ * The default is whole-token only, which is the setting that never fires on
+ * "Scunthorpe". `scanFused` relaxes that for one specific, real problem:
+ * **a username has no spaces to tokenise on.** "niggercollector" is a single
+ * token, whole-token matching finds nothing in it, and it is exactly the
+ * shape abuse takes on identity fields.
+ *
+ * The guard is length. Short words are the ones that live inside innocent
+ * long words — "ass" in "assassin", "cunt" in "Scunthorpe", "cock" in
+ * "cockpit", "dick" in "Dickinson". Requiring six characters excludes every
+ * one of those while still catching "nigger", "faggot", "asshole",
+ * "bastard". It is a real precision/recall trade and the number is the dial.
+ */
+export interface WordlistOptions {
+  /** Look for listed words INSIDE a longer token. Default false. */
+  scanFused?: boolean;
+  /** Shortest listed word allowed to match inside a longer token. Default 6. */
+  minFusedLength?: number;
+  /** Shortest token worth scanning at all. Default 8. */
+  minFusedToken?: number;
+}
+
 export interface WordlistEntry {
   /** Category reported on a hit ("profanity", "hate", …). */
   category: string;
@@ -60,7 +84,14 @@ const phraseMatches = (tokens: NormalizedToken[], words: string[]): boolean => {
   return false;
 };
 
-export function wordlistProvider(entries: WordlistEntry[]): ModerationProvider {
+export function wordlistProvider(
+  entries: WordlistEntry[],
+  options: WordlistOptions = {},
+): ModerationProvider {
+  const scanFused = options.scanFused === true;
+  const minFusedLength = options.minFusedLength ?? 6;
+  const minFusedToken = options.minFusedToken ?? 8;
+
   // Precompile: lowercase everything, split phrases once, not per call.
   const prepared = entries.map((entry) => {
     const singles: string[] = [];
@@ -70,11 +101,27 @@ export function wordlistProvider(entries: WordlistEntry[]): ModerationProvider {
       if (parts.length > 1) phrases.push(parts);
       else if (parts[0]) singles.push(parts[0]);
     }
-    return { category: entry.category, score: entry.score ?? 0.9, singles: new Set(singles), singlesList: singles, phrases };
+    // Words long enough to be safe to look for inside another word, plus
+    // phrases with their spaces removed — "blue waffle" typed as one token
+    // is the same evasion by another route.
+    const fusable = scanFused
+      ? [
+          ...singles.filter((word) => word.length >= minFusedLength),
+          ...phrases.map((parts) => parts.join("")).filter((w) => w.length >= minFusedLength),
+        ]
+      : [];
+    return {
+      category: entry.category,
+      score: entry.score ?? 0.9,
+      singles: new Set(singles),
+      singlesList: singles,
+      phrases,
+      fusable,
+    };
   });
 
   return {
-    name: "wordlist",
+    name: scanFused ? "wordlist+fused" : "wordlist",
     async classify(input: NormalizedInput): Promise<ProviderResult> {
       const flags: Record<string, boolean> = {};
       const scores: Record<string, number> = {};
@@ -93,7 +140,15 @@ export function wordlistProvider(entries: WordlistEntry[]): ModerationProvider {
           tokens.some((token) =>
             entry.singlesList.some((word) => tokenMatches(token, word)),
           ) ||
-          entry.phrases.some((phrase) => phraseMatches(tokens, phrase));
+          entry.phrases.some((phrase) => phraseMatches(tokens, phrase)) ||
+          // Fused scan, last because it is the most expensive and the least
+          // precise: only long tokens, only long words.
+          (entry.fusable.length > 0 &&
+            tokens.some(
+              (token) =>
+                token.exact.length >= minFusedToken &&
+                entry.fusable.some((word) => token.exact.includes(word)),
+            ));
         if (hit) {
           flags[entry.category] = true;
           scores[entry.category] = Math.max(scores[entry.category] ?? 0, entry.score);
