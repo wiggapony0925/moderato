@@ -13,7 +13,8 @@ and enough automation that the obvious cases never reach a human.
 ### Added
 
 - **`useModeratedField`** (`moderato/react`) — wrap any input whose value other
-  users will read: comments, usernames, display names, collection titles, bios.
+  users will read: comments, usernames, display names, list titles, bios,
+  product descriptions, support tickets.
   Debounced screening while typing, `check()` to flush the debounce at submit
   time, and plain state (`blocked`, `message`, `verdict`, `checking`) to drive
   your own popup. Renders nothing. Ships `inputProps` for the DOM and
@@ -28,9 +29,17 @@ and enough automation that the obvious cases never reach a human.
   - `toNodeHandler(handler)` bridges Express/Connect/`node:http`.
   - `authorize`, `maxBytes`, and per-call `headers` on the handler; an open
     screening endpoint is a free classifier for the internet, billed to you.
-- **`POLICY_PRESETS`** — `balanced` (feeds and comments), `identity`
-  (usernames, display names, collection titles — refuses anything that trips at
-  all, because a handle has no "review it later"), and `strict`.
+- **`POLICY_PRESETS`** — `balanced` (comments, captions, descriptions),
+  `identity` (usernames, display names, list and team titles — refuses anything
+  that trips at all, because a handle has no "review it later"), `strict`
+  (brand-safe and under-18 audiences), and `adult` (dating, 18+ communities,
+  art and fiction).
+- **`UNIVERSAL_ZERO_TOLERANCE`**, exported separately from
+  `DEFAULT_ZERO_TOLERANCE`. The default set contains `sexual`, which is a
+  product decision — the safe answer for a general-audience app and the wrong
+  answer for an 18+ one. The universal set is the part that is not debatable
+  anywhere, so a platform that allows adult content can build on it rather than
+  subtracting from someone else's assumptions.
 - **`PolicyConfig.blockScore`** and **`PolicyConfig.categories`** — refuse
   outright above a confidence, policy-wide or per category.
 - **Provider chaining** — `chainProviders([cheap, expensive])`, also spelled
@@ -52,7 +61,7 @@ and enough automation that the obvious cases never reach a human.
   (for the sink), and `signal` (caller cancellation, honoured alongside the
   engine's own timeout).
 - **`Moderato.screenText(text)`** for the common case.
-- **136 tests**, covering every entry point, and `npm run verify:package`, which
+- **141 tests**, covering every entry point, and `npm run verify:package`, which
   packs the tarball, unpacks it somewhere clean, and imports every published
   entry point as a real consumer would.
 
@@ -83,13 +92,19 @@ and enough automation that the obvious cases never reach a human.
   linked workspace works without a separate step, and `verify:package` proves
   the published shape resolves. (`publishConfig.exports` was the tidier-looking
   option and is a trap: `npm pack` does not apply it, so the override is
-  invisible until the tarball is already on the registry.) Consumers that want
-  to develop against the source alias it themselves — see the Vite config in
-  loupe-web and `scripts/sync-moderato.mjs` in loupe-frontend.
+  invisible until the tarball is already on the registry.) A monorepo that
+  wants to develop against the TypeScript source should alias the subpaths to
+  `src` in its own bundler config.
+- Documentation no longer assumes the app this was first written for. Added an
+  explicit "what this does not do": the offline wordlist is English-only, there
+  is no built-in review queue or per-user state, video is frame-sampled and
+  audio is not read at all, and a classifier score is not a substitute for
+  hash-matching and reporting obligations if you host images at scale.
 
 ## [0.1.0]
 
-- Initial extraction from loupe: the engine, the allow/review/block policy,
+- Initial extraction from the application it was written inside: the engine,
+  the allow/review/block policy,
   OpenAI / HTTP / local / wordlist / mock providers, image and video
   normalisation, `useModeration`, `useModeratedSubmit`, `ModeratedUpload`, and
   the server-refusal contract (`refusalFrom`, 422).

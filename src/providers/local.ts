@@ -2,8 +2,8 @@
  * Local rules provider — pattern matching, no network, text only.
  *
  * Be honest about what this is: wordlists are English-centric, trivially
- * defeated by "f u c k", and they fire on "this pull is sick". They cannot
- * see images at all, and images are most of the risk. Use this for dev,
+ * defeated by "f u c k", and they fire on "that headline is insane".
+ * They cannot see images at all, and images are most of the risk. Use for dev,
  * tests, air-gapped deployments, or as a fast pre-filter IN FRONT of a
  * real classifier — not as the classifier.
  */

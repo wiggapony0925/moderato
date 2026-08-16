@@ -1,7 +1,7 @@
 /**
  * useModeratedField — wrap any input whose value other people will read.
  *
- * A comment box, a username, a display name, a collection or list title, a
+ * A comment box, a username, a display name, a list or team title, a
  * bio, a listing description. Anything where what one person types shows up
  * next to everyone else's content.
  *

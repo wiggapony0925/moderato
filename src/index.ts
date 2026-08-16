@@ -39,6 +39,7 @@ export {
   DEFAULT_REVIEW_SCORE,
   DEFAULT_ZERO_TOLERANCE,
   POLICY_PRESETS,
+  UNIVERSAL_ZERO_TOLERANCE,
   canonical,
   decide,
 } from "./policy.js";

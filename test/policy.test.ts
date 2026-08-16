@@ -3,8 +3,10 @@ import {
   ALLOW,
   BLOCK,
   DEFAULT_REVIEW_SCORE,
+  DEFAULT_ZERO_TOLERANCE,
   POLICY_PRESETS,
   REVIEW,
+  UNIVERSAL_ZERO_TOLERANCE,
   canonical,
   decide,
 } from "../src/index.js";
@@ -113,6 +115,50 @@ describe("decide", () => {
       blockScore: Number.POSITIVE_INFINITY,
     });
     expect(verdict.action).toBe(REVIEW);
+  });
+});
+
+describe("the default zero-tolerance set is an opinion, and says so", () => {
+  it("keeps the indefensible categories separate from the debatable one", () => {
+    // Nothing in the universal set is a product decision.
+    for (const name of [
+      "sexual/minors",
+      "hate/threatening",
+      "harassment/threatening",
+      "violence/graphic",
+      "self-harm/instructions",
+      "illicit/violent",
+    ]) {
+      expect(UNIVERSAL_ZERO_TOLERANCE.has(name)).toBe(true);
+    }
+    // `sexual` is: safe for a general-audience app, wrong for an 18+ one.
+    expect(UNIVERSAL_ZERO_TOLERANCE.has("sexual")).toBe(false);
+    expect(DEFAULT_ZERO_TOLERANCE.has("sexual")).toBe(true);
+  });
+
+  it("refuses adult content by default", () => {
+    expect(decide(result({ sexual: 0.8 }, { sexual: true })).action).toBe(BLOCK);
+  });
+});
+
+describe("POLICY_PRESETS.adult", () => {
+  const policy = POLICY_PRESETS.adult;
+
+  it("lets consensual adult content through — that is the product, there", () => {
+    const verdict = decide(result({ sexual: 0.8 }, { sexual: true }), policy);
+    expect(verdict.action).toBe(REVIEW);
+    expect(verdict.action).not.toBe(BLOCK);
+  });
+
+  it("still refuses what is indefensible anywhere", () => {
+    for (const name of ["sexual/minors", "hate/threatening", "illicit/violent"]) {
+      const verdict = decide(result({ [name]: 0.5 }, { [name]: true }), policy);
+      expect(verdict.action).toBe(BLOCK);
+    }
+  });
+
+  it("still auto-refuses a near-certain hit in any other category", () => {
+    expect(decide(result({ hate: 0.96 }, { hate: true }), policy).action).toBe(BLOCK);
   });
 });
 

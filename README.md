@@ -11,6 +11,13 @@ npm install moderato
 
 ---
 
+Anywhere one person types something another person reads: a comment box, a
+username, a product listing, a support ticket, a review, a class discussion
+board, a dating profile, a marketplace description. Different products, same
+three problems.
+
+---
+
 ## The 30-second version
 
 Someone types a slur into your username field. You want three things:
@@ -141,7 +148,7 @@ classifier's opinion.
 ## `useModeratedField` — wrap any input
 
 The hook for anything a user types that other users will read: comments,
-usernames, display names, collection and list titles, bios, listing
+usernames, display names, list and team titles, bios, product and listing
 descriptions.
 
 ```tsx
@@ -265,9 +272,10 @@ Plus: **any hit in `zeroTolerance` blocks at any score.**
 
 | preset | for | behaviour |
 | --- | --- | --- |
-| `balanced` | feeds, comments, captions | review from 0.55, refuse from 0.92 |
-| `identity` | usernames, display names, collection titles | refuses anything that trips at all |
-| `strict` | brand-safe surfaces | review from 0.3, refuse from 0.8 |
+| `balanced` | feeds, comments, captions, descriptions | review from 0.55, refuse from 0.92 |
+| `identity` | usernames, display names, team and list titles | refuses anything that trips at all |
+| `strict` | brand-safe surfaces, under-18 audiences | review from 0.3, refuse from 0.8 |
+| `adult` | dating, 18+ communities, art and fiction | refuses only what is indefensible anywhere |
 
 `identity` is stricter on purpose. There is no "publish it and review later" for
 a handle — it is already on every row the account touches by the time anyone
@@ -285,6 +293,23 @@ looks. Nobody is owed their first choice of username.
 
 Set `blockScore: Infinity` for "only zeroTolerance ever blocks" — every other
 call goes to a human.
+
+### The defaults are opinions. Two of them are yours to overrule.
+
+**`sexual` is in the default zero-tolerance set.** That is a product decision,
+not a law of nature. It is the default because it is the safe answer for a
+general-audience app, an app-store listing, or anything a sponsor sees — and
+it is flatly the wrong answer for a dating app, an art community, or any 18+
+platform, where refusing adult content means refusing the product. If that is
+you, use `POLICY_PRESETS.adult` or pass your own `zeroTolerance`.
+`UNIVERSAL_ZERO_TOLERANCE` is exported separately: the categories no service
+anywhere benefits from publishing, with nothing debatable in it.
+
+**`blockScore: 0.92` decides things without a human.** That number is a
+defensible starting point, not a measured one, and the right value depends on
+your classifier, your audience and how much moderator time you have. Run the
+sink for a week before trusting it — and if your compliance posture requires a
+person on every removal, set `blockScore: Infinity` and keep the queue.
 
 ### On automation
 
@@ -376,12 +401,47 @@ yours.
 
 ---
 
+## What this does not do
+
+Worth knowing before you build on it.
+
+**It is not multilingual below the classifier.** `openAIProvider` and your own
+endpoint see raw text and handle whatever language it is in. The *offline*
+layer does not: `PROFANITY_PRESET` is English, and `normalizeTokens` de-leets
+and de-accents on Latin-alphabet assumptions. If your users write in Turkish or
+Japanese, the instant client-side layer will quietly find nothing. Supply your
+own vocabulary — `wordlistProvider([{ category: "hate", words: [...] }])` takes
+any list, and phrases as well as words — or lean on the classifier and accept
+the round trip.
+
+**It has no review queue and no database.** `verdict.action === "review"` is
+the signal and the `sink` is the firehose; the queue, the case model and the
+moderator UI are yours. A library that guessed at any of those would be wrong
+for everyone.
+
+**It holds no per-user state.** Repeat offenders, escalation, rate limits,
+shadowbans and appeals all need to know who someone is and what they did last
+week. Pass your user id as `context` and build that on the sink.
+
+**It does not see audio**, and it screens video by sampling frames — enough to
+catch a clip whose whole point is the problem, not enough to catch four bad
+seconds in a ten-minute upload.
+
+**It is not a compliance product.** A classifier's `sexual/minors` score is a
+guess. If you host user images at any scale you probably also need hash
+matching against known-CSAM databases and a reporting path to the relevant
+authority, and neither is something an npm package can give you. Refusing the
+write is the floor, not the obligation.
+
+---
+
 ## API
 
 ```ts
 // moderato
 createModerato, Moderato, decide, canonical
-POLICY_PRESETS, DEFAULT_ZERO_TOLERANCE, DEFAULT_REVIEW_SCORE, DEFAULT_BLOCK_SCORE
+POLICY_PRESETS, DEFAULT_ZERO_TOLERANCE, UNIVERSAL_ZERO_TOLERANCE
+DEFAULT_REVIEW_SCORE, DEFAULT_BLOCK_SCORE, DEFAULT_REFUSAL_MESSAGE
 openAIProvider, httpProvider, wordlistProvider, localProvider, mockProvider
 chainProviders, mergeResults
 PROFANITY_PRESET, PROFANITY_PRESET_STRICT, EN_PROFANITY, normalizeTokens
@@ -411,7 +471,7 @@ entry point, no runtime dependencies.
 
 ```bash
 npm install
-npm test           # 136 tests
+npm test           # 141 tests
 npm run typecheck
 npm run build
 npm run verify:package   # packs, unpacks, imports every entry point

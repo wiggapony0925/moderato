@@ -10,8 +10,8 @@
  *   that only ever has one answer;
  * - anything else the classifier flags (or scores above the review
  *   threshold) **reviews** — publish, but put it in front of a human.
- *   Community vocabulary is full of "sick", "insane", "killer" and
- *   "steal"; auto-deleting on a classifier's say-so deletes real posts;
+ *   Ordinary speech is full of "sick", "insane", "killer" and "kill it";
+ *   auto-deleting on a classifier's say-so deletes real posts;
  * - everything else **allows**, silently.
  *
  * Nothing here does IO or holds state, so it is the same decision on the
@@ -29,18 +29,37 @@ import type {
 import { ALLOW, BLOCK, REVIEW } from "./types.js";
 
 /**
- * The default refuse-outright set. Deliberately short: the categories where
- * "publish it and review later" is not an acceptable position to have
- * taken, legally or morally.
+ * Categories that are indefensible on ANY platform. Nothing here is a
+ * product decision — there is no service, anywhere, whose users are better
+ * served by publishing this and reviewing it next Tuesday.
  */
-export const DEFAULT_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
+export const UNIVERSAL_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
   "sexual/minors",
-  "sexual",
   "hate/threatening",
   "harassment/threatening",
   "violence/graphic",
   "self-harm/instructions",
   "illicit/violent",
+]);
+
+/**
+ * The default refuse-outright set: the universal list, plus `sexual`.
+ *
+ * **That last one is a product decision, not a law of nature**, and it is
+ * the default because it is the safe answer for the general case — a
+ * general-audience app, an app-store listing, anything a sponsor or a
+ * school network sees. It is the wrong answer for a dating app, an art
+ * community, or any 18+ platform, where adult content is a legitimate part
+ * of the product and refusing it is refusing the product.
+ *
+ * If that is you, do not inherit this set. Use `POLICY_PRESETS.adult`, or
+ * pass your own `zeroTolerance` — the whole point of it being a config
+ * field is that this library does not get to decide what your service is
+ * for.
+ */
+export const DEFAULT_ZERO_TOLERANCE: ReadonlySet<string> = new Set([
+  ...UNIVERSAL_ZERO_TOLERANCE,
+  "sexual",
 ]);
 
 /** Score above which a category counts even when the provider didn't flag it. */
@@ -68,14 +87,19 @@ export const DEFAULT_BLOCK_SCORE = 0.92;
 export const canonical = (name: string): string => name.replaceAll("_", "/");
 
 /**
- * Ready-made policies. Pick one by what the field IS, not by how strict you
- * feel — the right answer differs per surface, and these are the three
- * shapes that actually recur.
+ * Ready-made policies. Pick one by what the field IS and who your users
+ * are, not by how strict you feel — the right answer differs per surface
+ * and per product, and these are the shapes that actually recur.
+ *
+ * None of them is a default: `decide()` with no policy uses
+ * `DEFAULT_ZERO_TOLERANCE`, `DEFAULT_REVIEW_SCORE` and
+ * `DEFAULT_BLOCK_SCORE`, which is `balanced` in all but name.
  */
 export const POLICY_PRESETS = {
   /**
-   * Feeds, comments, captions. Refuses the indefensible, queues the
-   * doubtful, lets the community talk like a community.
+   * General-audience body text — comments, captions, descriptions, posts.
+   * Refuses the indefensible, queues the doubtful, lets people talk like
+   * people.
    */
   balanced: {
     reviewScore: DEFAULT_REVIEW_SCORE,
@@ -83,8 +107,8 @@ export const POLICY_PRESETS = {
   } satisfies PolicyConfig,
 
   /**
-   * **Identity fields** — usernames, display names, collection and list
-   * names, anything that is permanent, public, and appears next to other
+   * **Identity fields** — usernames, display names, team, list and
+   * workspace names: anything permanent, public, and shown next to other
    * people's content. There is no "publish it and review later" for a
    * handle: it is on every row the account touches until someone gets to
    * the queue. So anything that trips at all is refused, and the author is
@@ -105,6 +129,22 @@ export const POLICY_PRESETS = {
     reviewScore: 0.3,
     blockScore: 0.8,
     zeroTolerance: [...DEFAULT_ZERO_TOLERANCE, "hate", "harassment"],
+  } satisfies PolicyConfig,
+
+  /**
+   * **Platforms where adult content is legitimate** — dating, 18+
+   * communities, art and fiction sites. Refuses only what is indefensible
+   * anywhere (`UNIVERSAL_ZERO_TOLERANCE`), which very much still includes
+   * `sexual/minors` and threats; consensual adult material is left to your
+   * age gate and your own rules, where it belongs.
+   *
+   * This exists so the library's safe default is not mistaken for a claim
+   * about what every service should allow.
+   */
+  adult: {
+    reviewScore: 0.6,
+    blockScore: DEFAULT_BLOCK_SCORE,
+    zeroTolerance: [...UNIVERSAL_ZERO_TOLERANCE],
   } satisfies PolicyConfig,
 } as const;
 
