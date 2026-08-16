@@ -22,6 +22,7 @@ import type {
   NormalizedInput,
   ProviderResult,
 } from "../types.js";
+import { COMPOUND_HOMOGRAPHS, COMPOUND_PARTS } from "../vocab/common.js";
 import { EN_PROFANITY } from "../vocab/en.js";
 
 /**
@@ -61,6 +62,24 @@ export interface WordlistOptions {
   minFusedLength?: number;
   /** Shortest token worth scanning at all. Default 8. */
   minFusedToken?: number;
+  /**
+   * Split compound words: "shitshow", "asshat", "shithead".
+   *
+   * Narrower than `scanFused` and much more precise. The listed word has to
+   * sit at the START or END of the token, and whatever is left over has to be
+   * an ordinary word in its own right. That second test is what separates
+   * "shitshow" (shit + show) from "Scunthorpe" (cunt is not at an edge),
+   * "class" (cl is not a word) and "assassin" (assin is not a word).
+   *
+   * Because it works on boundaries rather than length, it catches four-letter
+   * words that `scanFused`'s six-character guard has to let through — which
+   * is most of the ones people actually compound.
+   *
+   * Off by default: it changes what gets refused, and that is your call.
+   */
+  scanCompound?: boolean;
+  /** Words allowed to complete a compound. Default `COMPOUND_PARTS`. */
+  compoundParts?: string[];
 }
 
 export interface WordlistEntry {
@@ -88,6 +107,24 @@ const tokenMatches = (token: NormalizedToken, word: string): boolean =>
   matchesWord(collapseRuns(token.bare), word);
 
 const collapseRuns = (token: string): string => token.replace(/(\p{L})\1+/gu, "$1");
+
+const HOMOGRAPHS = new Set(COMPOUND_HOMOGRAPHS);
+
+/**
+ * Is `token` a compound built on `word`?
+ *
+ * The word has to sit at an edge and the remainder has to be a word. Both
+ * halves matter: the edge test kills "Scunthorpe", the remainder test kills
+ * "class" and "assassin". Words that are also ordinary English — "cock" is a
+ * rooster — are excluded outright, because no test can save "cocktail".
+ */
+const isCompound = (token: string, word: string, parts: Set<string>): boolean => {
+  if (HOMOGRAPHS.has(word)) return false;
+  // A remainder of one or two letters is not a word worth trusting.
+  if (token.length < word.length + 3) return false;
+  if (token.startsWith(word) && parts.has(token.slice(word.length))) return true;
+  return token.endsWith(word) && parts.has(token.slice(0, -word.length));
+};
 
 /**
  * The allow list, prepared once.
@@ -129,6 +166,8 @@ export function findTerms(
   const scanFused = options.scanFused === true;
   const minFusedLength = options.minFusedLength ?? 6;
   const minFusedToken = options.minFusedToken ?? 8;
+  const scanCompound = options.scanCompound === true;
+  const parts = new Set(options.compoundParts ?? COMPOUND_PARTS);
   const allow = prepareAllow(options.allow);
   const tokens = normalizeTokens(text);
   const found: Span[] = [];
@@ -146,6 +185,8 @@ export function findTerms(
       if (isAllowed(token, allow)) continue;
       const hit =
         singles.some((word) => tokenMatches(token, word)) ||
+        (scanCompound &&
+          singles.some((word) => isCompound(token.exact, word, parts))) ||
         (scanFused &&
           token.exact.length >= minFusedToken &&
           singles.some(
@@ -190,6 +231,8 @@ export function wordlistProvider(
   const scanFused = options.scanFused === true;
   const minFusedLength = options.minFusedLength ?? 6;
   const minFusedToken = options.minFusedToken ?? 8;
+  const scanCompound = options.scanCompound === true;
+  const parts = new Set(options.compoundParts ?? COMPOUND_PARTS);
   const allow = prepareAllow(options.allow);
 
   // Precompile: lowercase everything, split phrases once, not per call.
@@ -221,7 +264,7 @@ export function wordlistProvider(
   });
 
   return {
-    name: scanFused ? "wordlist+fused" : "wordlist",
+    name: `wordlist${scanCompound ? "+compound" : ""}${scanFused ? "+fused" : ""}`,
     async classify(input: NormalizedInput): Promise<ProviderResult> {
       const flags: Record<string, boolean> = {};
       const scores: Record<string, number> = {};
@@ -244,6 +287,14 @@ export function wordlistProvider(
             entry.singlesList.some((word) => tokenMatches(token, word)),
           ) ||
           entry.phrases.some((phrase) => phraseMatches(tokens, phrase)) ||
+          // Compound splitting before the fused scan: it is the more precise
+          // of the two, and it catches the short words fused cannot.
+          (scanCompound &&
+            tokens.some((token) =>
+              entry.singlesList.some((word) =>
+                isCompound(token.exact, word, parts),
+              ),
+            )) ||
           // Fused scan, last because it is the most expensive and the least
           // precise: only long tokens, only long words.
           (entry.fusable.length > 0 &&

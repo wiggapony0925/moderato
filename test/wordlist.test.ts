@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PROFANITY_PRESET,
   PROFANITY_PRESET_STRICT,
+  findTerms,
   wordlistProvider,
 } from "../src/index.js";
 
@@ -154,5 +155,63 @@ describe("fused tokens — the username problem", () => {
   it("is off by default, because body text does not need it", async () => {
     expect(wordlistProvider(PROFANITY_PRESET).name).toBe("wordlist");
     expect(fused.name).toBe("wordlist+fused");
+  });
+});
+
+describe("compound splitting", () => {
+  const hit = (text: string) =>
+    findTerms(text, PROFANITY_PRESET, { scanCompound: true }).map((s) => s.value);
+
+  it("splits a compound built on a listed word", () => {
+    expect(hit("what a shitshow that update was")).toEqual(["shitshow"]);
+    expect(hit("you absolute asshat")).toEqual(["asshat"]);
+    expect(hit("total shithead")).toEqual(["shithead"]);
+    expect(hit("shitstorm incoming")).toEqual(["shitstorm"]);
+  });
+
+  it("catches the short words the fused scan has to let through", () => {
+    // "shit" is four letters, under the fused scan's six-letter guard.
+    expect(findTerms("shithead", PROFANITY_PRESET, { scanFused: true })).toEqual([]);
+    expect(hit("shithead")).toEqual(["shithead"]);
+  });
+
+  it("leaves innocent words alone — the whole point", () => {
+    // The listed word is not at a boundary.
+    expect(hit("I grew up in Scunthorpe")).toEqual([]);
+    // The remainder is not a word.
+    expect(hit("a class of assassins")).toEqual([]);
+    expect(hit("analysis of the compass")).toEqual([]);
+    expect(hit("sea bass in the grass")).toEqual([]);
+    expect(hit("Emily Dickinson")).toEqual([]);
+    expect(hit("my therapist said")).toEqual([]);
+  });
+
+  it("refuses to split a word that is also ordinary English", () => {
+    // "cock" is a rooster, a tap and a hammer mechanism. No boundary test
+    // can save "cocktail", so the word itself is excluded from splitting.
+    expect(hit("a classic cocktail recipe")).toEqual([]);
+    expect(hit("the cockpit door")).toEqual([]);
+    expect(hit("a peacock and a shuttlecock")).toEqual([]);
+  });
+
+  it("is off unless asked for", () => {
+    expect(findTerms("what a shitshow", PROFANITY_PRESET)).toEqual([]);
+  });
+
+  it("takes your own remainder vocabulary", () => {
+    expect(
+      findTerms("that shitbadger", PROFANITY_PRESET, {
+        scanCompound: true,
+        compoundParts: ["badger"],
+      }).map((s) => s.value),
+    ).toEqual(["shitbadger"]);
+  });
+
+  it("agrees with the provider", async () => {
+    const p = wordlistProvider(PROFANITY_PRESET, { scanCompound: true });
+    expect((await p.classify({ text: "what a shitshow", images: [] })).flags)
+      .toEqual({ profanity: true });
+    expect((await p.classify({ text: "a classic cocktail", images: [] })).flags)
+      .toEqual({});
   });
 });

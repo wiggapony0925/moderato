@@ -27,6 +27,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **A rules panel in the playground.** Every control is a real
   `defineModeration` field, the verdict on screen re-derives as you change
   them, and the panel prints the config being applied — copy it into your app.
+- **Compound splitting** (`WordlistOptions.scanCompound`, on by default under
+  `defineModeration`). People write `shithead`, `asshat` and `shitshow` as one
+  word; whole-token matching finds nothing, and the fused scan's six-letter
+  guard cannot help because `shit` is four. So a listed word counts inside a
+  longer token when it sits at a boundary **and** the remainder is itself a
+  word: `shit`+`show` matches, `Scunthorpe` has no boundary, `class` leaves
+  `cl`, `assassin` leaves `assin`. `cock` is excluded from splitting because it
+  is also a rooster and no rule saves `cocktail`. Corpus accuracy 75.0% →
+  76.7% with precision unchanged at 100%; the ablation table on the metrics
+  page has the rung.
 
 ### Fixed
 

@@ -51,7 +51,7 @@ what counts as a word — and none of it needs a bigger list.
 
 Claiming a filter is "evasion-resistant" means nothing without a number beside
 the same filter without the resistance. So here is the same corpus, the same
-policy, three matchers.
+policy, four matchers.
 
 <BrowserOnly fallback={<p>Loading…</p>}>
   {() => {
@@ -64,6 +64,57 @@ Precision does not move. That is the part to check: it would be easy to buy
 recall by matching more loosely, and the bill for that arrives as real posts
 getting deleted. Every gain above came from understanding the input better, not
 from lowering the bar.
+
+### Compound splitting, and the one word it cannot handle
+
+The third rung is worth pulling apart, because it is the one that looks most
+like cheating and is not.
+
+People write `shithead`, `asshat`, `shitshow` and `shitstorm` as single words.
+Whole-token matching finds nothing in any of them. The fused scan cannot help
+either: it only looks for listed words of six letters or more, and `shit` and
+`ass` are four and three — that guard is exactly what stops it flagging
+`Scunthorpe`.
+
+So compound splitting asks a different question. Not *does this long word
+contain a listed word*, but **is this word a listed word joined to another
+word**:
+
+| word | split | verdict |
+| --- | --- | --- |
+| `shitshow` | `shit` + `show` | `show` is a word → **compound** |
+| `Scunthorpe` | — | `cunt` is not at either edge → not a compound |
+| `class` | `cl` + `ass` | `cl` is not a word → not a compound |
+| `assassin` | `ass` + `assin` | `assin` is not a word → not a compound |
+
+Two tests, and both are load-bearing. The **boundary** test kills Scunthorpe;
+the **remainder** test kills `class`, `assassin`, `compass`, `bass`, `grass`,
+`Dickinson`, `analysis` and `therapist`. Neither alone is enough.
+
+Then there is `cock`. It is a rooster, a tap and part of a hammer, which makes
+`cocktail`, `cockpit`, `cockroach`, `peacock` and `shuttlecock` all ordinary
+English compounds that pass both tests perfectly. No cleverer rule saves them,
+because they are genuinely the same construction as `shithead`.
+
+We measured it before deciding: with `cock` splittable, the corpus loses a case
+it currently gets right (`a classic cocktail recipe`) and precision stops being
+100%. So the word is marked as one that is also ordinary English and never
+split. That is a property of the *word* — one line in
+`COMPOUND_HOMOGRAPHS` — rather than a list of outputs to suppress, which is
+what keeps it from becoming an endless exceptions file.
+
+The remainder vocabulary is deliberately about 180 short concrete nouns rather
+than a dictionary, and **small is the safety mechanism**. Every word added
+there completes more real compounds and more innocent ones; a full dictionary
+would flag `pussycat`. If your community needs more, pass your own
+`compoundParts` and own the trade:
+
+```ts
+wordlistProvider(PROFANITY_PRESET, {
+  scanCompound: true,
+  compoundParts: [...COMPOUND_PARTS, "badger", "goblin"],
+});
+```
 
 ## Evasion, one technique at a time
 

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-08-16T20:44:56.461Z",
-  "provider": "wordlist / wordlist+fused",
+  "generatedAt": "2026-08-16T21:21:39.918Z",
+  "provider": "wordlist+compound / wordlist+compound+fused",
   "shippedThreshold": 0.92,
   "corpus": {
     "cases": 60,
@@ -19,13 +19,13 @@
     "precision": 1,
     "recall": 0.65,
     "f1": 0.788,
-    "accuracy": 0.75,
-    "queueRate": 0.117,
+    "accuracy": 0.767,
+    "queueRate": 0.133,
     "blockRate": 0.217,
-    "autoHandled": 0.883,
+    "autoHandled": 0.867,
     "counts": {
-      "allow": 40,
-      "review": 7,
+      "allow": 39,
+      "review": 8,
       "block": 13
     },
     "confusion": {
@@ -37,241 +37,241 @@
   "sweep": [
     {
       "threshold": 0.5,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.52,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.54,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.56,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.58,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.6,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.62,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.64,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.66,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.68,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.7,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
     {
       "threshold": 0.72,
-      "precision": 0.65,
+      "precision": 0.619,
       "recall": 0.65,
-      "f1": 0.65,
+      "f1": 0.634,
       "accuracy": 0.633,
       "queueRate": 0,
-      "blockRate": 0.333,
+      "blockRate": 0.35,
       "autoHandled": 1,
       "counts": {
-        "allow": 40,
+        "allow": 39,
         "review": 0,
-        "block": 20
+        "block": 21
       },
       "confusion": {
         "tp": 13,
-        "fp": 7,
+        "fp": 8,
         "fn": 7
       }
     },
@@ -280,13 +280,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -300,13 +300,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -320,13 +320,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -340,13 +340,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -360,13 +360,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -380,13 +380,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -400,13 +400,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -420,13 +420,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -440,13 +440,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -460,13 +460,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -480,13 +480,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -500,13 +500,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -520,13 +520,13 @@
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -540,13 +540,13 @@
       "precision": 1,
       "recall": 0.2,
       "f1": 0.333,
-      "accuracy": 0.6,
-      "queueRate": 0.267,
+      "accuracy": 0.617,
+      "queueRate": 0.283,
       "blockRate": 0.067,
-      "autoHandled": 0.733,
+      "autoHandled": 0.717,
       "counts": {
-        "allow": 40,
-        "review": 16,
+        "allow": 39,
+        "review": 17,
         "block": 4
       },
       "confusion": {
@@ -636,16 +636,16 @@
       "accuracy": 0.786
     },
     {
-      "tag": "profanity",
-      "total": 11,
-      "correct": 9,
-      "accuracy": 0.818
-    },
-    {
       "tag": "fused",
       "total": 6,
       "correct": 5,
       "accuracy": 0.833
+    },
+    {
+      "tag": "profanity",
+      "total": 11,
+      "correct": 10,
+      "accuracy": 0.909
     },
     {
       "tag": "identity",
@@ -846,20 +846,43 @@
       }
     },
     {
+      "key": "compound",
+      "label": "+ compound splitting",
+      "detail": "listed word at a boundary, remainder is itself a word",
+      "threshold": 0.92,
+      "precision": 1,
+      "recall": 0.5,
+      "f1": 0.667,
+      "accuracy": 0.717,
+      "queueRate": 0.133,
+      "blockRate": 0.167,
+      "autoHandled": 0.867,
+      "counts": {
+        "allow": 42,
+        "review": 8,
+        "block": 10
+      },
+      "confusion": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 10
+      }
+    },
+    {
       "key": "fused",
       "label": "+ fused scan",
-      "detail": "listed words welded inside a longer token",
+      "detail": "listed words welded inside a longer token (identity fields)",
       "threshold": 0.92,
       "precision": 1,
       "recall": 0.65,
       "f1": 0.788,
-      "accuracy": 0.75,
-      "queueRate": 0.117,
+      "accuracy": 0.767,
+      "queueRate": 0.133,
       "blockRate": 0.217,
-      "autoHandled": 0.883,
+      "autoHandled": 0.867,
       "counts": {
-        "allow": 40,
-        "review": 7,
+        "allow": 39,
+        "review": 8,
         "block": 13
       },
       "confusion": {
@@ -950,8 +973,8 @@
       "block": 0
     },
     "review": {
-      "allow": 8,
-      "review": 7,
+      "allow": 7,
+      "review": 8,
       "block": 0
     },
     "block": {
@@ -1037,18 +1060,6 @@
         "instructions"
       ],
       "note": "self-harm instructions"
-    },
-    {
-      "id": "seed-0016",
-      "text": "what a shitshow that update was",
-      "expected": "review",
-      "actual": "allow",
-      "score": 0,
-      "categories": [],
-      "tags": [
-        "profanity"
-      ],
-      "note": "ordinary swearing about a product"
     },
     {
       "id": "seed-0033",

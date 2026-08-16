@@ -98,6 +98,7 @@ export {
 } from "./providers/wordlist.js";
 export type { WordlistEntry, WordlistOptions } from "./providers/wordlist.js";
 export { EN_PROFANITY } from "./vocab/en.js";
+export { COMPOUND_HOMOGRAPHS, COMPOUND_PARTS } from "./vocab/common.js";
 export { normalizeTokens } from "./normalize.js";
 export { hashes, labelled, maskSpans } from "./mask.js";
 export type { Mask, Span } from "./mask.js";

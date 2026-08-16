@@ -85,16 +85,19 @@ function loadCorpus() {
 // ── the classifier pass ──
 
 /**
- * The recommended production shape, per surface.
+ * The recommended production shape, per surface — the same one
+ * `defineModeration` assembles.
  *
- * Identity fields get the fused scan and body text does not. That is not an
- * arbitrary split: a username has no spaces to tokenise on, so the fused
- * scan is the only thing that finds "niggercollector" — while body text
- * already has whitespace doing that job, and the scan would only add
- * false-positive risk on long compound words for no recall.
+ * Compound splitting runs everywhere: it is boundary-based, so it costs
+ * nothing in precision. The fused scan is the blunt one and runs on identity
+ * fields only. That is not an arbitrary split — a username has no spaces to
+ * tokenise on, so the fused scan is the only thing that finds a slur welded
+ * into the middle of a handle, while body text already has whitespace doing
+ * that job and the scan would only add false-positive risk for no recall.
  */
 function buildProvider(surface) {
   const wordlist = wordlistProvider(PROFANITY_PRESET, {
+    scanCompound: true,
     scanFused: surface === "identity",
   });
   if (process.env.MODERATO_SCREEN_URL) {
@@ -154,10 +157,19 @@ const ABLATION = [
     provider: wordlistProvider(PROFANITY_PRESET),
   },
   {
+    key: "compound",
+    label: "+ compound splitting",
+    detail: "listed word at a boundary, remainder is itself a word",
+    provider: wordlistProvider(PROFANITY_PRESET, { scanCompound: true }),
+  },
+  {
     key: "fused",
     label: "+ fused scan",
-    detail: "listed words welded inside a longer token",
-    provider: wordlistProvider(PROFANITY_PRESET, { scanFused: true }),
+    detail: "listed words welded inside a longer token (identity fields)",
+    provider: wordlistProvider(PROFANITY_PRESET, {
+      scanCompound: true,
+      scanFused: true,
+    }),
   },
 ];
 

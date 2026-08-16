@@ -341,8 +341,14 @@ export function defineModeration<S extends string = string>(
     const offline: ModerationProvider[] = [
       wordlistProvider(vocabulary, {
         allow: s.allow,
-        // Identity fields have no whitespace to tokenise on, so the fused
-        // scan earns its precision cost there and nowhere else.
+        // Compound splitting everywhere: it is boundary-based, so it costs
+        // nothing in precision and catches "shithead" and "asshat", which
+        // people write in comments as readily as in handles.
+        scanCompound: true,
+        // The fused scan is the blunt one — any listed word of six letters
+        // or more, anywhere inside a long token. Identity fields have no
+        // whitespace to tokenise on, so it earns its precision cost there
+        // and nowhere else.
         scanFused: s.kind === "identity",
       }),
     ];
@@ -394,6 +400,7 @@ export function defineModeration<S extends string = string>(
       const spans = [
         ...findTerms(text, vocabulary, {
           allow: s.allow,
+          scanCompound: true,
           scanFused: s.kind === "identity",
         }),
         ...(pii.length > 0 ? findPii(text, { categories: pii }) : []),

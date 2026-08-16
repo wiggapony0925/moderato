@@ -56,6 +56,15 @@ interface ModerationConfig {
   sink?: ModerationSink;
 }
 
+interface WordlistOptions {
+  allow?: string[];          // words this product permits, evasion-resistantly
+  scanCompound?: boolean;    // shit+show; boundary + remainder-is-a-word
+  compoundParts?: string[];  // your own remainder vocabulary
+  scanFused?: boolean;       // any listed word inside a long token (blunter)
+  minFusedLength?: number;   // default 6
+  minFusedToken?: number;    // default 8
+}
+
 interface SurfaceConfig {
   kind?: "body" | "identity";     // identity = permanent, public, no spaces
   audience?: Audience;
@@ -140,6 +149,8 @@ dropped even when the provider flags it. That is the opt-out
 | `OPENAI_MODERATION_MODEL` | `"omni-moderation-latest"` |
 | `httpProvider` | `(options: HttpProviderOptions) => ModerationProvider` |
 | `wordlistProvider` | `(entries: WordlistEntry[], options?: WordlistOptions) => ModerationProvider` |
+| `COMPOUND_PARTS` | words allowed to complete a compound — see [How it works](./algorithm.mdx) |
+| `COMPOUND_HOMOGRAPHS` | listed words that are also ordinary English, never split |
 | `localProvider` | `(rules: LocalRule[]) => ModerationProvider` |
 | `mockProvider` | `(options?: MockProviderOptions) => ModerationProvider` |
 | `chainProviders` | `(providers, options?) => ModerationProvider` |
