@@ -472,6 +472,20 @@ Node ≥ 18 (needs `fetch`/`Request`). React ≥ 18 is an *optional* peer — th
 and server entry points do not import it. ESM and CJS builds, types for every
 entry point, no runtime dependencies.
 
+## The docs site
+
+```bash
+npm run docs:start    # locally, with hot reload
+npm run docs:build    # builds the library first — the site imports the real dist
+npm run deploy:docs   # gcloud run deploy moderato-docs --source . --region us-central1
+```
+
+Docusaurus, in `docs/`, deployed to Cloud Run behind nginx. It imports the
+built package rather than describing it, so the
+[playground](https://wiggapony0925.github.io/moderato/playground) and the
+[metrics page](https://wiggapony0925.github.io/moderato/rehearsal) run the same
+files npm ships — and a rename that misses a page fails the build.
+
 ## Rehearsals
 
 A version number tells you nothing about whether a moderation library still

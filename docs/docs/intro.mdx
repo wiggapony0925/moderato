@@ -3,22 +3,22 @@ id: intro
 title: moderato
 sidebar_label: What this is
 slug: /
+hide_title: true
+hide_table_of_contents: true
+pagination_prev: null
+description: Content moderation, in tempo. Wrap any input, image picker or upload with allow / review / block screening.
 ---
 
-# moderato
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { Hero, Places, Facts } from "@site/src/components/Home";
 
-**Content moderation, in tempo.** Wrap any input, image picker or upload with
-`allow` / `review` / `block` screening — OpenAI omni-moderation, your own
-endpoint, or offline rules.
+export const Version = () => useDocusaurusContext().siteConfig.customFields.libraryVersion;
 
-```bash
-npm install moderato
-```
+<Hero version={useDocusaurusContext().siteConfig.customFields.libraryVersion} />
 
-Zero runtime dependencies. ESM and CJS. Types for every entry point. React is an
-optional peer — the core and the server half never import it.
+<Facts />
 
----
+<Places />
 
 ## The problem, in one paragraph
 
@@ -55,6 +55,16 @@ createModerato({
   sink: (event) => metrics.record(event),
 });
 ```
+
+:::info Numbers, not adjectives
+
+Most libraries in this space describe their accuracy with an adjective. This one
+publishes the measurement, the whole precision/recall curve, and every single
+case it gets wrong — see [Rehearsal metrics](./rehearsal.mdx). The first thing
+you will notice there is that the free offline layer alone catches barely half
+of what it should. That gap is the argument for the classifier behind it.
+
+:::
 
 ## Where to go next
 

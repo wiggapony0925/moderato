@@ -67,7 +67,8 @@
     "docs:version": "npm --prefix docs run version",
     "bench": "node bench/run.mjs",
     "cycle": "node bench/cycle.mjs",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run verify:package && npm run rehearse && npm run check:docs"
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run verify:package && npm run rehearse && npm run check:docs",
+    "deploy:docs": "gcloud run deploy moderato-docs --source . --region us-central1 --port 8080 --allow-unauthenticated"
   },
   "peerDependencies": {
     "react": ">=18"

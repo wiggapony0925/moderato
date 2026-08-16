@@ -124,3 +124,27 @@ createModerato({ provider, policy: { blockScore: Infinity } });
 `DEFAULT_ZERO_TOLERANCE`, but `UNIVERSAL_ZERO_TOLERANCE` is now exported
 separately and `POLICY_PRESETS.adult` builds on it. Nothing changes unless you
 opt in. See [Policy](./policy.md).
+
+## Deploying the docs
+
+The site ships to Cloud Run the same way the rest of the estate does — one
+`gcloud` command, a multi-stage image, nginx on 8080:
+
+```bash
+npm run deploy:docs
+# → gcloud run deploy moderato-docs --source . --region us-central1 \
+#     --port 8080 --allow-unauthenticated
+```
+
+The build runs from the **repo root**, not from `docs/`, because the site
+imports the real built package. The image therefore builds the library first,
+then runs `check:docs`, then builds the site — so a deploy fails for the same
+reasons CI does, rather than shipping a site that describes an API that no
+longer exists.
+
+`nginx.conf` caches fingerprinted assets for a year, the rehearsal report for
+five minutes, and HTML not at all. A docs page that lags a deploy is the exact
+failure this whole arrangement exists to avoid.
+
+To serve from a different host, set `DOCS_URL` and `DOCS_BASE_URL` at build
+time — for GitHub Pages at `/moderato/`, for a custom domain at `/`.

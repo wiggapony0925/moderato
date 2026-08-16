@@ -10,7 +10,7 @@ import {
   canonical,
   decide,
 } from "../src/index.js";
-import type { ProviderResult } from "../src/index.js";
+import type { PolicyConfig, ProviderResult } from "../src/index.js";
 
 const result = (
   scores: Record<string, number>,
@@ -211,7 +211,7 @@ describe("survives a consumer's loose transpiler", () => {
   it("ships zero-tolerance sets that contain only strings", () => {
     for (const name of DEFAULT_ZERO_TOLERANCE) expect(typeof name).toBe("string");
     for (const name of UNIVERSAL_ZERO_TOLERANCE) expect(typeof name).toBe("string");
-    for (const preset of Object.values(POLICY_PRESETS)) {
+    for (const preset of Object.values(POLICY_PRESETS) as PolicyConfig[]) {
       for (const name of preset.zeroTolerance ?? []) expect(typeof name).toBe("string");
     }
   });

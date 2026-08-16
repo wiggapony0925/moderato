@@ -163,42 +163,50 @@ export default function Playground(): JSX.Element {
         ))}
       </div>
 
-      <label className={styles.label} htmlFor="playground-input">
-        Type anything
-      </label>
-      <textarea
-        id="playground-input"
-        className={styles.input}
-        rows={3}
-        placeholder="Say something a user of your product might say…"
-        spellCheck={false}
-        value={field.value}
-        onChange={(event) => {
-          field.inputProps.onChange(event);
-          reset();
-        }}
-        onBlur={field.inputProps.onBlur}
-      />
-
-      <div className={styles.samples}>
-        <span className={styles.samplesLabel}>Try:</span>
-        {SAMPLES.map((sample) => (
-          <button
-            key={sample}
-            type="button"
-            className={styles.sample}
-            onClick={() => {
-              field.setValue(sample);
-              reset();
-            }}
-          >
-            {sample}
-          </button>
-        ))}
+      <div className={styles.composer}>
+        <label className={styles.label} htmlFor="playground-input">
+          Type anything
+        </label>
+        <textarea
+          id="playground-input"
+          className={styles.input}
+          rows={2}
+          placeholder="Say something a user of your product might say…"
+          spellCheck={false}
+          value={field.value}
+          onChange={(event) => {
+            field.inputProps.onChange(event);
+            reset();
+          }}
+          onBlur={field.inputProps.onBlur}
+        />
+        <div className={styles.composerFoot}>
+          <span className={styles.samplesLabel}>Try</span>
+          {SAMPLES.map((sample) => (
+            <button
+              key={sample}
+              type="button"
+              className={styles.sample}
+              onClick={() => {
+                field.setValue(sample);
+                reset();
+              }}
+            >
+              {sample}
+            </button>
+          ))}
+          <span className={styles.counter}>{field.value.length} chars</span>
+        </div>
       </div>
 
       {text ? (
         <div className={styles.verdict} aria-live="polite">
+          <div
+            className={`${styles.verdictRule} ${
+              styles[`rule_${verdict?.action ?? "allow"}`]
+            }`}
+          />
+          <div className={styles.verdictBody}>
           <div className={styles.verdictHead}>
             <ActionBadge action={verdict?.action ?? "allow"} pending={field.checking} />
             <div className={styles.verdictCopy}>
@@ -292,7 +300,13 @@ export default function Playground(): JSX.Element {
             </div>
           )}
 
-          {saved ? <p className={styles.saved}>{saved}</p> : null}
+          {saved ? (
+            <p className={styles.saved}>
+              <span aria-hidden>✓</span>
+              {saved}
+            </p>
+          ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -304,7 +318,7 @@ export default function Playground(): JSX.Element {
             </h3>
             <p className={styles.mutedSmall}>
               {cases.length === 0
-                ? "Nothing yet. Label a verdict above and it lands here."
+                ? "Kept in this browser. Nothing is sent anywhere."
                 : `${agreements} agreement${agreements === 1 ? "" : "s"}, ${
                     cases.length - agreements
                   } correction${cases.length - agreements === 1 ? "" : "s"}.`}
@@ -330,7 +344,11 @@ export default function Playground(): JSX.Element {
           </div>
         </header>
 
-        {cases.length > 0 && (
+        {cases.length === 0 ? (
+          <p className={styles.empty}>
+            Label a verdict above and it lands here, ready to export.
+          </p>
+        ) : (
           <div className="mdScroll">
             <table className={styles.table}>
               <thead>

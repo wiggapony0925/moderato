@@ -1,0 +1,14 @@
+# Build context for the docs image. Everything the Dockerfile needs is COPYed
+# explicitly, so this is mostly about not shipping 400MB of node_modules to
+# Cloud Build on every deploy.
+node_modules
+docs/node_modules
+dist
+docs/build
+docs/.docusaurus
+coverage
+.git
+.github
+*.log
+.env
+.env.*

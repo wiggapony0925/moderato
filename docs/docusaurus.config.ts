@@ -27,8 +27,12 @@ const config: Config = {
   tagline: "Content moderation, in tempo.",
   favicon: "img/favicon.svg",
 
-  url: "https://wiggapony0925.github.io",
-  baseUrl: "/moderato/",
+  // Cloud Run serves at the root of its own hostname, the same way loupe-web
+  // does. DOCS_URL / DOCS_BASE_URL let a different host (a custom domain, a
+  // preview revision, GitHub Pages at /moderato/) override without a code
+  // change.
+  url: process.env.DOCS_URL ?? "https://moderato-docs.run.app",
+  baseUrl: process.env.DOCS_BASE_URL ?? "/",
   organizationName: "wiggapony0925",
   projectName: "moderato",
   trailingSlash: false,

@@ -106,8 +106,8 @@
   /* 2px of surface between segments: the boundary reads without a border,
      and adjacent fills never blend into one block. */
   gap: 2px;
-  height: 34px;
-  border-radius: 4px;
+  height: 26px;
+  border-radius: 5px;
   overflow: hidden;
 }
 .stackSegment {
