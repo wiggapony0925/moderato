@@ -49,7 +49,7 @@ const config: Config = {
       "classic",
       {
         docs: {
-          routeBasePath: "/",
+          routeBasePath: "/docs",
           sidebarPath: "./sidebars.ts",
           editUrl: "https://github.com/wiggapony0925/moderato/tree/main/docs/",
           // Every published version keeps its own docs. A reader on 1.x must
@@ -73,11 +73,12 @@ const config: Config = {
       title: "moderato",
       logo: { alt: "", src: "img/logo.svg" },
       items: [
-        { to: "/quickstart", label: "Quickstart", position: "left" },
-        { to: "/field-hook", label: "Guides", position: "left" },
-        { to: "/api", label: "API", position: "left" },
-        { to: "/playground", label: "Playground", position: "left" },
-        { to: "/rehearsal", label: "Metrics", position: "left" },
+        { to: "/docs/", label: "Docs", position: "left" },
+        { to: "/docs/quickstart", label: "Quickstart", position: "left" },
+        { to: "/docs/field-hook", label: "Guides", position: "left" },
+        { to: "/docs/api", label: "API", position: "left" },
+        { to: "/docs/playground", label: "Playground", position: "left" },
+        { to: "/docs/rehearsal", label: "Metrics", position: "left" },
         { type: "docsVersionDropdown", position: "right" },
         {
           href: "https://github.com/wiggapony0925/moderato",
@@ -92,17 +93,17 @@ const config: Config = {
         {
           title: "Docs",
           items: [
-            { label: "Quickstart", to: "/quickstart" },
-            { label: "Client or server?", to: "/client-or-server" },
-            { label: "API reference", to: "/api" },
+            { label: "Quickstart", to: "/docs/quickstart" },
+            { label: "Client or server?", to: "/docs/client-or-server" },
+            { label: "API reference", to: "/docs/api" },
           ],
         },
         {
           title: "Evidence",
           items: [
-            { label: "Playground", to: "/playground" },
-            { label: "Rehearsal metrics", to: "/rehearsal" },
-            { label: "What it does not do", to: "/limits" },
+            { label: "Playground", to: "/docs/playground" },
+            { label: "Rehearsal metrics", to: "/docs/rehearsal" },
+            { label: "What it does not do", to: "/docs/limits" },
           ],
         },
         {
